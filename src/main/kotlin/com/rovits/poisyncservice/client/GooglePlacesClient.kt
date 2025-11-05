@@ -83,7 +83,7 @@ class GooglePlacesClient(
             val response = webClient.post() // POST isteği gönder
                 .uri("/places:searchText") // Endpoint
                 .bodyValue(requestBody) // Data class objesi gönder
-                .header("X-Goog-Api-Key", apiKey) // API key header
+                 //.header("X-Goog-Api-Key", apiKey) // API key header
                 .header("X-Goog-FieldMask", textSearchFieldMask) // Dönmesini istediğimiz field'ler
                 .retrieve() // İsteği çalıştır
                 .awaitBody<SearchTextResponse>() // Response'u bekle ve dönüştür
@@ -116,7 +116,7 @@ class GooglePlacesClient(
 
             val details = webClient.get() // GET isteği gönder
                 .uri("/places/{placeId}", placeId) // Endpoint ve path variable
-                .header("X-Goog-Api-Key", apiKey) // API key header
+                //.header("X-Goog-Api-Key", apiKey) // API key header
                 .header("X-Goog-FieldMask", detailFieldMask) // Dönmesini istediğimiz field'ler
                 .retrieve() // İsteği çalıştır
                 .awaitBody<PlaceDetails>() // Response'u bekle ve dönüştür

@@ -1,1 +1,1 @@
-rootProject.name = "demopoi-sync-service"
+rootProject.name = "poi-sync-service"
