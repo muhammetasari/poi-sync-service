@@ -19,9 +19,7 @@ class SecurityConfig(
         http
             .csrf { it.disable() }
             .authorizeHttpRequests {
-                it
-                    .requestMatchers("/actuator/health").permitAll()
-                    .anyRequest().authenticated()
+                it.anyRequest().permitAll() // API Key filter kontrol edecek
             }
             .addFilterBefore(apiKeyFilter, UsernamePasswordAuthenticationFilter::class.java)
             .sessionManagement { it.sessionCreationPolicy(SessionCreationPolicy.STATELESS) }
