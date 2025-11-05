@@ -21,14 +21,14 @@ COPY src src
 RUN gradle bootJar --no-daemon -x test
 
 # ===================================
-# STAGE 2: Runtime
+# STAGE 2: Runtime (Ubuntu base)
 # ===================================
-FROM eclipse-temurin:17-jre-alpine
+FROM eclipse-temurin:17-jre-jammy
 
 WORKDIR /app
 
-# Non-root user oluştur (güvenlik)
-RUN addgroup -S spring && adduser -S spring -G spring
+# Non-root user oluştur
+RUN groupadd -r spring && useradd -r -g spring spring
 USER spring:spring
 
 # Build stage'den JAR'ı kopyala
