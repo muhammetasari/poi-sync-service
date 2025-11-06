@@ -27,10 +27,6 @@ FROM eclipse-temurin:17-jre-jammy
 
 WORKDIR /app
 
-# Non-root user oluştur
-RUN groupadd -r spring && useradd -r -g spring spring
-USER spring:spring
-
 # Build stage'den JAR'ı kopyala
 COPY --from=builder /app/build/libs/*.jar app.jar
 
