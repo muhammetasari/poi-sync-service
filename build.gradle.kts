@@ -20,6 +20,7 @@ repositories {
 }
 
 dependencies {
+    implementation("com.google.firebase:firebase-admin:9.2.0")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactor")
     implementation("org.springframework.boot:spring-boot-starter-actuator")
     implementation("org.springframework.boot:spring-boot-starter-cache")
