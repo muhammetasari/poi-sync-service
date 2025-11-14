@@ -25,6 +25,9 @@ services:
       # Google API
       GOOGLE_API_KEY: ${GOOGLE_API_KEY}
 
+      # API Key
+      API_SECRET_KEY: ${API_SECRET_KEY}
+
       # JWT (opsiyonel)
       JWT_SECRET: ${JWT_SECRET:-default-secret-change-in-production}
 
