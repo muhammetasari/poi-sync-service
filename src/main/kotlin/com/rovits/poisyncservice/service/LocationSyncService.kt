@@ -11,94 +11,88 @@ import kotlinx.coroutines.withContext
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 
-@Service // Spring service component'i
+@Service
 class LocationSyncService(
-    private val apiClient: GooglePlacesClient, // Google Places client'ı inject et
-    private val poiRepository: PoiRepository // MongoDB repository'yi inject et
+    private val apiClient: GooglePlacesClient,
+    private val poiRepository: PoiRepository
 ) {
     private val logger = LoggerFactory.getLogger(LocationSyncService::class.java)
 
-    suspend fun syncPois(lat: Double, lng: Double, radius: Double, type: String) { // Ana sync fonksiyonu (suspend = async)
-        logger.info("🚀 Senkronizasyon başlatıldı - Lokasyon: ($lat, $lng), Yarıçap: ${radius}m, Tip: $type")
+    suspend fun syncPois(lat: Double, lng: Double, radius: Double, type: String) {
+        logger.info("Starting POI sync: lat={}, lng={}, radius={}m, type={}", lat, lng, radius, type)
 
-        withContext(Dispatchers.IO) { // IO thread'inde çalıştır (network/db işlemleri için)
-
-            // 1. Yakındaki POI'leri ara
-            logger.info("🔍 ADIM 1: Yakındaki POI'ler aranıyor...")
+        withContext(Dispatchers.IO) {
+            // Step 1: Search nearby places
             val nearbyPlaces = apiClient.searchNearby(lat, lng, radius, type).places ?: emptyList()
 
             if (nearbyPlaces.isEmpty()) {
-                logger.warn("⚠️ Hiç POI bulunamadı, senkronizasyon sonlandırılıyor")
+                logger.warn("No places found for given criteria")
                 return@withContext
             }
 
-            logger.info("📋 ${nearbyPlaces.size} POI bulundu, detaylar çekiliyor...")
+            logger.info("Found {} places, fetching details", nearbyPlaces.size)
 
-            // 2. Her POI için detayları paralel olarak çek
-            logger.info("🔄 ADIM 2: POI detayları paralel olarak çekiliyor...")
+            // Step 2: Fetch details in parallel
             val detailedPlaces = coroutineScope {
                 nearbyPlaces.map { place ->
-                    async { // Her birini paralel async task olarak başlat
+                    async {
                         try {
-                            apiClient.getPlaceDetails(place.id) // POI detaylarını getir (cache'ten veya API'den)
+                            apiClient.getPlaceDetails(place.id)
                         } catch (e: Exception) {
-                            logger.warn("⚠️ POI detay çekilemedi (${place.id}): ${e.message}")
-                            null // Hata durumunda null döndür
+                            logger.warn("Failed to fetch details for placeId={}: {}", place.id, e.message)
+                            null
                         }
                     }
                 }
             }
 
-            // 3. Başarılı sonuçları topla (null olanları filtrele)
+            // Step 3: Filter successful results
             val successfulDetails = detailedPlaces.mapNotNull { it.await() }
-            logger.info("✅ ${successfulDetails.size}/${nearbyPlaces.size} POI detayı başarıyla çekildi")
+            logger.info("Successfully fetched {}/{} place details", successfulDetails.size, nearbyPlaces.size)
 
-            var newCount = 0 // Yeni eklenen kayıt sayısı
-            var updatedCount = 0 // Güncellenen kayıt sayısı
-            var skippedCount = 0 // Değişmediği için atlanan kayıt sayısı
+            var newCount = 0
+            var updatedCount = 0
+            var skippedCount = 0
 
-            // 4. Her POI için upsert işlemi yap
-            logger.info("💾 ADIM 3: MongoDB'ye kayıt ediliyor...")
+            // Step 4: Upsert to MongoDB
             successfulDetails.forEach { details ->
-                // DTO'dan MongoDB document'ine dönüştür
                 val newDoc = PoiDocument(
-                    placeId = details.id, // Google'ın place ID'si
-                    name = details.displayName?.text ?: "İsimsiz Yer", // POI adı
-                    address = details.formattedAddress ?: "Adres Yok", // Adres
-                    openingHours = details.openingHours?.let { // Çalışma saatleri (varsa)
+                    placeId = details.id,
+                    name = details.displayName?.text ?: "Unnamed Place",
+                    address = details.formattedAddress ?: "No Address",
+                    openingHours = details.openingHours?.let {
                         PoiOpeningHours(
-                            openNow = it.openNow, // Şu anda açık mı?
-                            weekdayDescriptions = it.weekdayDescriptions // Haftalık çalışma saatleri
+                            openNow = it.openNow,
+                            weekdayDescriptions = it.weekdayDescriptions
                         )
                     }
                 )
 
-                val existing = poiRepository.findByPlaceId(details.id) // DB'de var mı kontrol et
+                val existing = poiRepository.findByPlaceId(details.id)
 
-                if (existing.isPresent) { // Varsa
+                if (existing.isPresent) {
                     val existingDoc = existing.get()
-                    if (hasChanged(existingDoc, newDoc)) { // Değişmişse
-                        poiRepository.save(newDoc) // Güncelle
+                    if (hasChanged(existingDoc, newDoc)) {
+                        poiRepository.save(newDoc)
                         updatedCount++
-                        logger.debug("🔄 Güncellendi: ${newDoc.name}")
+                        logger.debug("Updated POI: {}", newDoc.name)
                     } else {
                         skippedCount++
-                        logger.debug("⏭️ Değişmedi: ${newDoc.name}")
                     }
-                } else { // Yoksa
-                    poiRepository.save(newDoc) // Yeni kayıt ekle
+                } else {
+                    poiRepository.save(newDoc)
                     newCount++
-                    logger.debug("✨ Yeni eklendi: ${newDoc.name}")
+                    logger.debug("Created new POI: {}", newDoc.name)
                 }
             }
 
-            logger.info("📊 SONUÇ: ✨ Yeni: $newCount | 🔄 Güncellenen: $updatedCount | ⏭️ Değişmedi: $skippedCount")
+            logger.info("Sync completed: new={}, updated={}, skipped={}", newCount, updatedCount, skippedCount)
         }
     }
 
-    private fun hasChanged(existing: PoiDocument, new: PoiDocument): Boolean { // İçerik değişmiş mi kontrol et
-        return existing.name != new.name || // Ad değişmiş mi?
-                existing.address != new.address || // Adres değişmiş mi?
-                existing.openingHours != new.openingHours // Çalışma saatleri değişmiş mi?
+    private fun hasChanged(existing: PoiDocument, new: PoiDocument): Boolean {
+        return existing.name != new.name ||
+                existing.address != new.address ||
+                existing.openingHours != new.openingHours
     }
 }

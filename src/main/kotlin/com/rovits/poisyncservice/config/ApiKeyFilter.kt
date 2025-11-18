@@ -18,7 +18,7 @@ class ApiKeyFilter(
         response: HttpServletResponse,
         filterChain: FilterChain
     ) {
-        // Health check için API key kontrolü yapma
+        // Skip API key check for health endpoint
         if (request.requestURI == "/actuator/health") {
             filterChain.doFilter(request, response)
             return

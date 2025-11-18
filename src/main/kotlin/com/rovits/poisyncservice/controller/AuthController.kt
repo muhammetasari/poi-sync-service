@@ -2,7 +2,7 @@ package com.rovits.poisyncservice.controller
 
 import com.rovits.poisyncservice.domain.dto.AuthResponse
 import com.rovits.poisyncservice.domain.dto.LoginRequest
-import com.rovits.poisyncservice.domain.dto.RegisterRequest // YENİ IMPORT
+import com.rovits.poisyncservice.domain.dto.RegisterRequest
 import com.rovits.poisyncservice.domain.dto.SocialLoginRequest
 import com.rovits.poisyncservice.service.AuthService
 import org.slf4j.LoggerFactory
@@ -21,32 +21,25 @@ class AuthController(
 
     @PostMapping("/social-login")
     fun socialLogin(@RequestBody request: SocialLoginRequest): ResponseEntity<AuthResponse> {
-        // ... (Bu metot Adım 6'da yazıldığı gibi kalıyor) ...
-        logger.info("-> POST /auth/social-login isteği alındı (Provider: ${request.provider})")
+        logger.info("Social login request: provider={}", request.provider)
         val authResponse = authService.socialLogin(request)
-        logger.info("<- POST /auth/social-login cevabı: Giriş başarılı (Kullanıcı: ${authResponse.user.email})")
+        logger.info("Social login successful: email={}", authResponse.user.email)
         return ResponseEntity.ok(authResponse)
     }
 
-    // YENİ EKLENEN ENDPOINT
     @PostMapping("/register")
     fun register(@RequestBody request: RegisterRequest): ResponseEntity<AuthResponse> {
-        logger.info("-> POST /auth/register isteği alındı (${request.email})")
+        logger.info("Registration request: email={}", request.email)
         val authResponse = authService.register(request)
-        logger.info("<- POST /auth/register cevabı: Kayıt başarılı.")
-        // Android tarafı için kayıt sonrası otomatik giriş (200 OK)
+        logger.info("Registration successful: email={}", authResponse.user.email)
         return ResponseEntity.ok(authResponse)
     }
 
-    // GÜNCELLENEN ENDPOINT (Geçici 501 hatası kaldırıldı)
     @PostMapping("/login")
     fun login(@RequestBody request: LoginRequest): ResponseEntity<AuthResponse> {
-        logger.info("-> POST /auth/login isteği alındı (${request.email})")
-
-        // Servis metodunu çağır
+        logger.info("Login request: email={}", request.email)
         val authResponse = authService.login(request)
-
-        logger.info("<- POST /auth/login cevabı: Giriş başarılı.")
+        logger.info("Login successful: email={}", authResponse.user.email)
         return ResponseEntity.ok(authResponse)
     }
 }

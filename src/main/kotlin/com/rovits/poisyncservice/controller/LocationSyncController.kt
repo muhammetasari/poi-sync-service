@@ -11,36 +11,31 @@ import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
 
-@RestController // REST API controller olduğunu belirt
-@RequestMapping("/api/sync") // Tüm endpoint'ler /api/sync ile başlar
+@RestController
+@RequestMapping("/api/sync")
 class LocationSyncController(
-    private val syncService: LocationSyncService // Service'i inject et
+    private val syncService: LocationSyncService
 ) {
     private val logger = LoggerFactory.getLogger(LocationSyncController::class.java)
+    private val controllerScope = CoroutineScope(Dispatchers.IO)
 
-    private val controllerScope = CoroutineScope(Dispatchers.IO) // Arka plan işleri için coroutine scope
-
-    @PostMapping("/locations") // POST /api/sync/locations endpoint'i
+    @PostMapping("/locations")
     fun startLocationSync(
-        @RequestParam lat: Double, // Zorunlu parametre: enlem
-        @RequestParam lng: Double, // Zorunlu parametre: boylam
-        @RequestParam(required = false, defaultValue = "5000.0") radius: Double, // Opsiyonel: yarıçap (default: 5000m)
-        @RequestParam(required = false, defaultValue = "restaurant") type: String // Opsiyonel: POI tipi (default: restaurant)
+        @RequestParam lat: Double,
+        @RequestParam lng: Double,
+        @RequestParam(required = false, defaultValue = "5000.0") radius: Double,
+        @RequestParam(required = false, defaultValue = "restaurant") type: String
     ): ResponseEntity<String> {
-        logger.info("📥 API İsteği alındı - POST /api/sync/locations")
-        logger.info("📍 Parametreler: lat=$lat, lng=$lng, radius=$radius, type=$type")
+        logger.info("Received sync request: lat={}, lng={}, radius={}, type={}", lat, lng, radius, type)
 
-        controllerScope.launch { // Arka planda async olarak çalıştır
+        controllerScope.launch {
             try {
-                logger.info("⏳ Senkronizasyon servisi çağrılıyor...")
-                syncService.syncPois(lat, lng, radius, type) // Sync işlemini başlat
-                logger.info("✅ Senkronizasyon başarıyla tamamlandı")
+                syncService.syncPois(lat, lng, radius, type)
             } catch (e: Exception) {
-                logger.error("❌ Senkronizasyon hatası: ${e.message}", e) // Hata durumunda log bas
+                logger.error("Sync failed", e)
             }
         }
 
-        logger.info("📤 HTTP 202 Accepted response gönderiliyor")
-        return ResponseEntity.accepted().body("Senkronizasyon başlatıldı.") // Hemen 202 Accepted response döndür
+        return ResponseEntity.accepted().body("Synchronization started")
     }
 }

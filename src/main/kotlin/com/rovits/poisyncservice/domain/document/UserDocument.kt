@@ -5,19 +5,15 @@ import org.springframework.data.mongodb.core.index.Indexed
 import org.springframework.data.mongodb.core.mapping.Document
 import java.util.*
 
-@Document(collection = "users") // MongoDB collection adı: "users"
+@Document(collection = "users")
 data class UserDocument(
     @Id
-    val id: String = UUID.randomUUID().toString(), // Benzersiz ID
+    val id: String = UUID.randomUUID().toString(),
 
-    @Indexed(unique = true) // Email'i benzersiz yap ve indexle (hızlı arama için)
+    @Indexed(unique = true)
     val email: String,
 
     val name: String?,
-
-    // E-posta/şifre girişi için (Google girişinde null olabilir)
     val password: String?,
-
-    // Kullanıcının nasıl kayıt olduğu (google, email vb.)
     val provider: String
 )

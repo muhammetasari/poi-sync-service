@@ -5,7 +5,7 @@ import com.google.firebase.FirebaseApp
 import com.google.firebase.FirebaseOptions
 import org.slf4j.LoggerFactory
 import org.springframework.context.annotation.Configuration
-import java.io.FileInputStream // YENİ IMPORT
+import java.io.FileInputStream
 import java.io.InputStream
 import javax.annotation.PostConstruct
 
@@ -17,23 +17,20 @@ class FirebaseConfig {
     @PostConstruct
     fun initializeFirebase() {
         try {
-            val credentialsPath = System.getenv("GOOGLE_CREDENTIALS_PATH") // 1. Ortam değişkenini kontrol et
+            val credentialsPath = System.getenv("GOOGLE_CREDENTIALS_PATH")
             val serviceAccount: InputStream?
 
             if (!credentialsPath.isNullOrBlank()) {
-                // YOL 1: Render.com (veya production) - Dosya yolundan oku
-                logger.info("Firebase 'GOOGLE_CREDENTIALS_PATH' ortam değişkeni bulundu. Dosya okunuyor: $credentialsPath")
+                logger.info("Loading Firebase credentials from file: {}", credentialsPath)
                 serviceAccount = FileInputStream(credentialsPath)
             } else {
-                // YOL 2: Lokal Docker Testi - Classpath'ten (resources) oku
-                logger.warn("Firebase 'GOOGLE_CREDENTIALS_PATH' ortam değişkeni bulunamadı.")
-                logger.info("Classpath'ten (resources) 'serviceAccountKey.json' aranıyor... (Lokal test için uygundur)")
+                logger.info("Loading Firebase credentials from classpath: serviceAccountKey.json")
                 serviceAccount = this::class.java.classLoader.getResourceAsStream("serviceAccountKey.json")
             }
 
             if (serviceAccount == null) {
-                logger.error("❌ Kritik Hata: Firebase serviceAccountKey.json dosyası ne dosya yolunda ne de classpath'te bulunamadı!")
-                throw IllegalStateException("Firebase credentials bulunamadı.")
+                logger.error("Firebase credentials not found")
+                throw IllegalStateException("Firebase credentials not found")
             }
 
             val options: FirebaseOptions = FirebaseOptions.builder()
@@ -42,11 +39,11 @@ class FirebaseConfig {
 
             if (FirebaseApp.getApps().isEmpty()) {
                 FirebaseApp.initializeApp(options)
-                logger.info("✅ Firebase Admin SDK başarıyla başlatıldı.")
+                logger.info("Firebase Admin SDK initialized successfully")
             }
         } catch (e: Exception) {
-            logger.error("❌ Firebase Admin SDK başlatılamadı: ${e.message}", e)
-            throw e // Hata durumunda uygulamanın çökmesi (fail-fast) iyidir.
+            logger.error("Failed to initialize Firebase Admin SDK", e)
+            throw e
         }
     }
 }
