@@ -11,34 +11,30 @@ import javax.crypto.SecretKey
 
 @Service
 class JwtService(
-    // application-render.properties'ten değerleri al
     @Value("\${jwt.secret-key}") private val secretKey: String,
     @Value("\${jwt.expiration-ms}") private val expirationMs: Long
 ) {
-    // Gizli anahtarı JWT kütüphanesinin anlayacağı formata çevir
     private val key: SecretKey by lazy {
         Keys.hmacShaKeyFor(secretKey.toByteArray())
     }
 
-    // Normal JWT Token üretir (Kullanıcı bilgileri içerir)
     fun generateToken(user: UserDocument): String {
         val now = Date()
-        val expiryDate = Date(now.time + expirationMs) // 1 gün geçerli (properties'ten)
+        val expiryDate = Date(now.time + expirationMs)
 
         return Jwts.builder()
-            .setSubject(user.email) // Token'ın konusu (username)
-            .claim("userId", user.id) // Token içine ek bilgi (payload)
+            .setSubject(user.email)
+            .claim("userId", user.id)
             .claim("name", user.name)
             .setIssuedAt(now)
             .setExpiration(expiryDate)
-            .signWith(key) // Gizli anahtarla imzala
+            .signWith(key)
             .compact()
     }
 
-    // Refresh Token üretir (Daha uzun ömürlü, örn: 7 gün)
     fun generateRefreshToken(user: UserDocument): String {
         val now = Date()
-        val expiryDate = Date(now.time + expirationMs * 7) // 7 gün geçerli
+        val expiryDate = Date(now.time + expirationMs * 7)
 
         return Jwts.builder()
             .setSubject(user.email)
@@ -48,9 +44,6 @@ class JwtService(
             .compact()
     }
 
-    // --- Token Doğrulama Metotları ---
-
-    // Token'dan email bilgisini alır
     fun getEmailFromToken(token: String): String? {
         return try {
             getClaims(token).subject
@@ -59,7 +52,6 @@ class JwtService(
         }
     }
 
-    // Token geçerli mi diye kontrol eder
     fun validateToken(token: String): Boolean {
         return try {
             getClaims(token)
@@ -69,7 +61,6 @@ class JwtService(
         }
     }
 
-    // Token'ın içindeki tüm bilgileri (claims) alır
     private fun getClaims(token: String): Claims {
         return Jwts.parser()
             .setSigningKey(key)

@@ -2,10 +2,10 @@ package com.rovits.poisyncservice.service
 
 import com.google.firebase.auth.FirebaseAuth
 import com.rovits.poisyncservice.domain.document.UserDocument
-import com.rovits.poisyncservice.domain.dto.* // RegisterRequest import'u
+import com.rovits.poisyncservice.domain.dto.*
+import com.rovits.poisyncservice.exception.*
 import com.rovits.poisyncservice.repository.UserRepository
 import org.slf4j.LoggerFactory
-import org.springframework.security.authentication.BadCredentialsException // Yeni import
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -20,21 +20,31 @@ class AuthService(
 
     @Transactional
     fun socialLogin(request: SocialLoginRequest): AuthResponse {
-        // ... (Bu metot Adım 5'te yazıldığı gibi kalıyor) ...
-        logger.info("Sosyal giriş isteği alınıyor: provider=${request.provider}")
+        logger.info("Processing social login: provider={}", request.provider)
 
         val decodedToken = try {
             FirebaseAuth.getInstance().verifyIdToken(request.firebaseToken)
         } catch (e: Exception) {
-            logger.error("❌ Geçersiz Firebase token: ${e.message}")
-            throw IllegalArgumentException("Geçersiz Firebase token")
+            logger.error("Invalid Firebase token", e)
+            throw ExternalServiceException(
+                errorCode = ErrorCodes.FIREBASE_TOKEN_INVALID,
+                messageKey = "error.firebase.token.invalid",
+                serviceName = "Firebase",
+                cause = e
+            )
         }
 
-        val email = decodedToken.email ?: throw IllegalArgumentException("Token'dan email alınamadı")
+        val email = decodedToken.email ?: throw ValidationException(
+            errorCode = ErrorCodes.FIELD_REQUIRED,
+            messageKey = "error.validation.required",
+            messageArgs = arrayOf("email"),
+            fieldName = "email"
+        )
+
         val name = decodedToken.name
 
         val user = userRepository.findByEmail(email).orElseGet {
-            logger.info("Yeni kullanıcı oluşturuluyor: $email")
+            logger.info("Creating new user: email={}", email)
             val newUser = UserDocument(
                 email = email,
                 name = name,
@@ -44,72 +54,72 @@ class AuthService(
             userRepository.save(newUser)
         }
 
-        logger.info("Kullanıcı girişi başarılı: $email")
+        logger.info("Social login successful: email={}", email)
         return generateAuthResponse(user)
     }
 
-    // YENİ EKLENEN METOT: KAYIT OLMA
     @Transactional
     fun register(request: RegisterRequest): AuthResponse {
-        logger.info("Yeni kullanıcı kayıt isteği: ${request.email}")
+        logger.info("Processing registration: email={}", request.email)
 
-        // 1. Kullanıcı zaten var mı?
         if (userRepository.findByEmail(request.email).isPresent) {
-            logger.warn("Kayıt hatası: Email zaten kullanılıyor - ${request.email}")
-            throw IllegalArgumentException("Bu e-posta adresi zaten kullanılıyor.")
+            logger.warn("Registration failed: Email already exists - {}", request.email)
+            throw BusinessException(
+                errorCode = ErrorCodes.USER_ALREADY_EXISTS,
+                messageKey = "error.user.already.exists",
+                messageArgs = arrayOf(request.email)
+            )
         }
 
-        // 2. Şifreyi hash'le
         val hashedPassword = passwordEncoder.encode(request.password)
 
-        // 3. Yeni kullanıcıyı oluştur
         val newUser = UserDocument(
             email = request.email,
             name = request.name,
-            password = hashedPassword, // Hash'lenmiş şifre
-            provider = "email" // Sağlayıcı
+            password = hashedPassword,
+            provider = "email"
         )
 
-        // 4. Kullanıcıyı kaydet
         val savedUser = userRepository.save(newUser)
-        logger.info("Yeni kullanıcı başarıyla kaydedildi: ${savedUser.email} (ID: ${savedUser.id})")
+        logger.info("User registered successfully: email={}, id={}", savedUser.email, savedUser.id)
 
-        // 5. Token üretip cevap dön (kayıt sonrası otomatik giriş)
         return generateAuthResponse(savedUser)
     }
 
-    // YENİ EKLENEN METOT: GİRİŞ YAPMA
-    @Transactional(readOnly = true) // Sadece okuma işlemi
+    @Transactional(readOnly = true)
     fun login(request: LoginRequest): AuthResponse {
-        logger.info("Giriş isteği: ${request.email}")
+        logger.info("Processing login: email={}", request.email)
 
-        // 1. Kullanıcıyı bul
         val user = userRepository.findByEmail(request.email)
             .orElseThrow {
-                logger.warn("Giriş hatası: Kullanıcı bulunamadı - ${request.email}")
-                BadCredentialsException("Geçersiz e-posta veya şifre.")
+                logger.warn("Login failed: User not found - {}", request.email)
+                AuthenticationException(
+                    errorCode = ErrorCodes.INVALID_CREDENTIALS,
+                    messageKey = "error.invalid.credentials"
+                )
             }
 
-        // 2. Sağlayıcıyı kontrol et (Google ile giren şifreyle giremez)
         if (user.provider != "email" || user.password == null) {
-            logger.warn("Giriş hatası: Yanlış sağlayıcı (${user.provider}) - ${request.email}")
-            throw BadCredentialsException("Bu hesap ile ${user.provider} üzerinden giriş yapılmıştır.")
+            logger.warn("Login failed: Wrong provider ({}) - {}", user.provider, request.email)
+            throw AuthenticationException(
+                errorCode = ErrorCodes.INVALID_CREDENTIALS,
+                messageKey = "error.invalid.credentials"
+            )
         }
 
-        // 3. Şifreyi kontrol et
         if (!passwordEncoder.matches(request.password, user.password)) {
-            logger.warn("Giriş hatası: Yanlış şifre - ${request.email}")
-            throw BadCredentialsException("Geçersiz e-posta veya şifre.")
+            logger.warn("Login failed: Wrong password - {}", request.email)
+            throw AuthenticationException(
+                errorCode = ErrorCodes.INVALID_CREDENTIALS,
+                messageKey = "error.invalid.credentials"
+            )
         }
 
-        logger.info("Kullanıcı girişi başarılı: ${user.email}")
-
-        // 4. Token üretip cevap dön
+        logger.info("Login successful: email={}", user.email)
         return generateAuthResponse(user)
     }
 
     private fun generateAuthResponse(user: UserDocument): AuthResponse {
-        // ... (Bu metot Adım 5'te yazıldığı gibi kalıyor) ...
         val token = jwtService.generateToken(user)
         val refreshToken = jwtService.generateRefreshToken(user)
 

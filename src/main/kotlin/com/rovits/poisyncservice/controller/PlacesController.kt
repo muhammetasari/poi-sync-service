@@ -14,15 +14,6 @@ class PlacesController(
 ) {
     private val logger = LoggerFactory.getLogger(PlacesController::class.java)
 
-    /**
-     * Nearby Search - Belirli bir konumun yakınındaki POI'leri arar
-     *
-     * @param lat Enlem (latitude)
-     * @param lng Boylam (longitude)
-     * @param radius Arama yarıçapı (metre, default: 5000)
-     * @param type POI tipi (örn: restaurant, cafe, hotel)
-     * @return Bulunan POI'lerin listesi
-     */
     @GetMapping("/nearby")
     fun searchNearby(
         @RequestParam lat: Double,
@@ -30,32 +21,17 @@ class PlacesController(
         @RequestParam(required = false, defaultValue = "5000.0") radius: Double,
         @RequestParam(required = false, defaultValue = "restaurant") type: String
     ): ResponseEntity<SearchNearbyResponse> = runBlocking {
-        logger.info("📍 Nearby Search isteği alındı")
-        logger.info("   Konum: ($lat, $lng)")
-        logger.info("   Yarıçap: ${radius}m")
-        logger.info("   Tip: $type")
+        logger.info("Nearby search request: lat={}, lng={}, radius={}, type={}", lat, lng, radius, type)
 
         return@runBlocking try {
             val response = googlePlacesClient.searchNearby(lat, lng, radius, type)
-            logger.info("✅ ${response.places?.size ?: 0} POI bulundu")
             ResponseEntity.ok(response)
         } catch (e: Exception) {
-            logger.error("❌ Nearby search hatası: ${e.message}", e)
+            logger.error("Nearby search failed", e)
             ResponseEntity.internalServerError().build()
         }
     }
 
-    /**
-     * Text Search - Metin tabanlı POI arama
-     *
-     * @param query Aranacak metin (örn: "istanbul'daki en iyi restoranlar")
-     * @param languageCode Dil kodu (default: "tr")
-     * @param maxResults Maksimum sonuç sayısı (default: 20)
-     * @param lat (Opsiyonel) Location bias için enlem
-     * @param lng (Opsiyonel) Location bias için boylam
-     * @param radius (Opsiyonel) Location bias için yarıçap
-     * @return Bulunan POI'lerin listesi
-     */
     @GetMapping("/text-search")
     fun searchText(
         @RequestParam query: String,
@@ -65,14 +41,9 @@ class PlacesController(
         @RequestParam(required = false) lng: Double?,
         @RequestParam(required = false) radius: Double?
     ): ResponseEntity<SearchTextResponse> = runBlocking {
-        logger.info("🔎 Text Search isteği alındı")
-        logger.info("   Sorgu: \"$query\"")
-        logger.info("   Dil: $languageCode")
-        logger.info("   Max Sonuç: $maxResults")
+        logger.info("Text search request: query='{}', language={}", query, languageCode)
 
-        // Location bias varsa oluştur
         val locationBias = if (lat != null && lng != null && radius != null) {
-            logger.info("   Location Bias: ($lat, $lng) - ${radius}m")
             LocationBias(
                 circle = Circle(
                     center = Center(latitude = lat, longitude = lng),
@@ -88,33 +59,24 @@ class PlacesController(
                 maxResultCount = maxResults,
                 locationBias = locationBias
             )
-            logger.info("✅ ${response.places?.size ?: 0} POI bulundu")
             ResponseEntity.ok(response)
         } catch (e: Exception) {
-            logger.error("❌ Text search hatası: ${e.message}", e)
+            logger.error("Text search failed", e)
             ResponseEntity.internalServerError().build()
         }
     }
 
-    /**
-     * Place Details - Belirli bir POI'nin detaylı bilgilerini getirir
-     *
-     * @param placeId Google Places API'den alınan place ID
-     * @return POI'nin detaylı bilgileri (ad, adres, çalışma saatleri)
-     */
     @GetMapping("/details/{placeId}")
     fun getPlaceDetails(
         @PathVariable placeId: String
     ): ResponseEntity<PlaceDetails> = runBlocking {
-        logger.info("📋 Place Details isteği alındı")
-        logger.info("   Place ID: $placeId")
+        logger.info("Place details request: placeId={}", placeId)
 
         return@runBlocking try {
             val details = googlePlacesClient.getPlaceDetails(placeId)
-            logger.info("✅ POI detayı başarıyla getirildi: ${details.displayName?.text}")
             ResponseEntity.ok(details)
         } catch (e: Exception) {
-            logger.error("❌ Place details hatası: ${e.message}", e)
+            logger.error("Failed to fetch place details", e)
             ResponseEntity.internalServerError().build()
         }
     }

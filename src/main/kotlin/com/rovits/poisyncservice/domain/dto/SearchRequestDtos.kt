@@ -22,10 +22,10 @@ data class Center(
 
 // ===== TEXT SEARCH REQUEST =====
 data class SearchTextRequest(
-    val textQuery: String, // Aranacak metin (örn: "istanbul'daki en iyi restoranlar")
-    val languageCode: String? = "tr", // Dil kodu (opsiyonel)
-    val maxResultCount: Int? = 20, // Maksimum sonuç sayısı (opsiyonel)
-    val locationBias: LocationBias? = null // Lokasyon bias (opsiyonel)
+    val textQuery: String,
+    val languageCode: String? = "tr",
+    val maxResultCount: Int? = 20,
+    val locationBias: LocationBias? = null
 )
 
 data class LocationBias(
