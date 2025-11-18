@@ -3,9 +3,9 @@ package com.rovits.poisyncservice.service
 import com.google.firebase.auth.FirebaseAuth
 import com.rovits.poisyncservice.domain.document.UserDocument
 import com.rovits.poisyncservice.domain.dto.*
+import com.rovits.poisyncservice.exception.*
 import com.rovits.poisyncservice.repository.UserRepository
 import org.slf4j.LoggerFactory
-import org.springframework.security.authentication.BadCredentialsException
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -26,10 +26,21 @@ class AuthService(
             FirebaseAuth.getInstance().verifyIdToken(request.firebaseToken)
         } catch (e: Exception) {
             logger.error("Invalid Firebase token", e)
-            throw IllegalArgumentException("Invalid Firebase token")
+            throw ExternalServiceException(
+                errorCode = ErrorCodes.FIREBASE_TOKEN_INVALID,
+                messageKey = "error.firebase.token.invalid",
+                serviceName = "Firebase",
+                cause = e
+            )
         }
 
-        val email = decodedToken.email ?: throw IllegalArgumentException("Email not found in token")
+        val email = decodedToken.email ?: throw ValidationException(
+            errorCode = ErrorCodes.FIELD_REQUIRED,
+            messageKey = "error.validation.required",
+            messageArgs = arrayOf("email"),
+            fieldName = "email"
+        )
+
         val name = decodedToken.name
 
         val user = userRepository.findByEmail(email).orElseGet {
@@ -53,7 +64,11 @@ class AuthService(
 
         if (userRepository.findByEmail(request.email).isPresent) {
             logger.warn("Registration failed: Email already exists - {}", request.email)
-            throw IllegalArgumentException("Email already in use")
+            throw BusinessException(
+                errorCode = ErrorCodes.USER_ALREADY_EXISTS,
+                messageKey = "error.user.already.exists",
+                messageArgs = arrayOf(request.email)
+            )
         }
 
         val hashedPassword = passwordEncoder.encode(request.password)
@@ -78,17 +93,26 @@ class AuthService(
         val user = userRepository.findByEmail(request.email)
             .orElseThrow {
                 logger.warn("Login failed: User not found - {}", request.email)
-                BadCredentialsException("Invalid email or password")
+                AuthenticationException(
+                    errorCode = ErrorCodes.INVALID_CREDENTIALS,
+                    messageKey = "error.invalid.credentials"
+                )
             }
 
         if (user.provider != "email" || user.password == null) {
             logger.warn("Login failed: Wrong provider ({}) - {}", user.provider, request.email)
-            throw BadCredentialsException("This account uses ${user.provider} login")
+            throw AuthenticationException(
+                errorCode = ErrorCodes.INVALID_CREDENTIALS,
+                messageKey = "error.invalid.credentials"
+            )
         }
 
         if (!passwordEncoder.matches(request.password, user.password)) {
             logger.warn("Login failed: Wrong password - {}", request.email)
-            throw BadCredentialsException("Invalid email or password")
+            throw AuthenticationException(
+                errorCode = ErrorCodes.INVALID_CREDENTIALS,
+                messageKey = "error.invalid.credentials"
+            )
         }
 
         logger.info("Login successful: email={}", user.email)

@@ -1,6 +1,8 @@
 package com.rovits.poisyncservice.client
 
 import com.rovits.poisyncservice.domain.dto.*
+import com.rovits.poisyncservice.exception.ErrorCodes
+import com.rovits.poisyncservice.exception.ExternalServiceException
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.beans.factory.annotation.Value
@@ -51,7 +53,12 @@ class GooglePlacesClient(
             response
         } catch (e: Exception) {
             logger.error("Failed to search nearby places", e)
-            throw e
+            throw ExternalServiceException(
+                errorCode = ErrorCodes.GOOGLE_API_ERROR,
+                messageKey = "error.google.api.failed",
+                serviceName = "Google Places API",
+                cause = e
+            )
         }
     }
 
@@ -82,7 +89,12 @@ class GooglePlacesClient(
             response
         } catch (e: Exception) {
             logger.error("Failed to search text", e)
-            throw e
+            throw ExternalServiceException(
+                errorCode = ErrorCodes.GOOGLE_API_ERROR,
+                messageKey = "error.google.api.failed",
+                serviceName = "Google Places API",
+                cause = e
+            )
         }
     }
 
@@ -109,11 +121,16 @@ class GooglePlacesClient(
 
             cache?.put(placeId, details)
             logger.debug("Place details cached: placeId={}", placeId)
-            
+
             details
         } catch (e: Exception) {
             logger.error("Failed to fetch place details for placeId={}", placeId, e)
-            throw e
+            throw ExternalServiceException(
+                errorCode = ErrorCodes.GOOGLE_API_ERROR,
+                messageKey = "error.google.api.failed",
+                serviceName = "Google Places API",
+                cause = e
+            )
         }
     }
 }
