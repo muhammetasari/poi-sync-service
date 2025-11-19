@@ -90,4 +90,5 @@ object ErrorCodes {
     const val SERVICE_UNAVAILABLE = "SYS_002"
     const val CONFIGURATION_ERROR = "SYS_003"
     const val UNKNOWN_ERROR = "SYS_999"
+    const val RATE_LIMIT_EXCEEDED = "SYS_005"
 }

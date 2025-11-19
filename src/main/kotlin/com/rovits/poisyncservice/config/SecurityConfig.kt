@@ -1,6 +1,7 @@
 package com.rovits.poisyncservice.config
 
 import com.rovits.poisyncservice.exception.SecurityExceptionHandler
+import com.rovits.poisyncservice.config.RateLimitFilter
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.security.authentication.AuthenticationManager
@@ -13,11 +14,13 @@ import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.security.web.SecurityFilterChain
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter
 
+
 @Configuration
 @EnableWebSecurity
 class SecurityConfig(
     private val apiKeyFilter: ApiKeyFilter,
     private val jwtAuthenticationFilter: JwtAuthenticationFilter,
+    private val rateLimitFilter: RateLimitFilter,
     private val securityExceptionHandler: SecurityExceptionHandler
 ) {
 
@@ -50,6 +53,7 @@ class SecurityConfig(
             }
             .sessionManagement { it.sessionCreationPolicy(SessionCreationPolicy.STATELESS) }
             .addFilterBefore(apiKeyFilter, UsernamePasswordAuthenticationFilter::class.java)
+            .addFilterAfter(rateLimitFilter, ApiKeyFilter::class.java)
             .addFilterAfter(jwtAuthenticationFilter, ApiKeyFilter::class.java)
 
         return http.build()
