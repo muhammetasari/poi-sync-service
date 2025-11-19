@@ -1,5 +1,6 @@
 package com.rovits.poisyncservice.config
 
+import com.rovits.poisyncservice.exception.SecurityExceptionHandler
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.security.authentication.AuthenticationManager
@@ -16,7 +17,8 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @EnableWebSecurity
 class SecurityConfig(
     private val apiKeyFilter: ApiKeyFilter,
-    private val jwtAuthenticationFilter: JwtAuthenticationFilter
+    private val jwtAuthenticationFilter: JwtAuthenticationFilter,
+    private val securityExceptionHandler: SecurityExceptionHandler
 ) {
 
     @Bean
@@ -33,21 +35,20 @@ class SecurityConfig(
     fun securityFilterChain(http: HttpSecurity): SecurityFilterChain {
         http
             .csrf { it.disable() }
+            .exceptionHandling {
+                it.authenticationEntryPoint(securityExceptionHandler)
+                it.accessDeniedHandler(securityExceptionHandler)
+            }
             .authorizeHttpRequests {
-                // Public Endpointler (Giriş, Kayıt, Health Check)
                 it.requestMatchers(
                     "/api/auth/**",
                     "/actuator/health",
                     "/v3/api-docs/**",
                     "/swagger-ui/**"
                 ).permitAll()
-
-                // Diğer tüm istekler kimlik doğrulama gerektirir
                 it.anyRequest().authenticated()
             }
-            .sessionManagement {
-                it.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-            }
+            .sessionManagement { it.sessionCreationPolicy(SessionCreationPolicy.STATELESS) }
             .addFilterBefore(apiKeyFilter, UsernamePasswordAuthenticationFilter::class.java)
             .addFilterAfter(jwtAuthenticationFilter, ApiKeyFilter::class.java)
 
