@@ -2,6 +2,8 @@ package com.rovits.poisyncservice.config
 
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
+import org.springframework.security.authentication.AuthenticationManager
+import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration
 import org.springframework.security.config.annotation.web.builders.HttpSecurity
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity
 import org.springframework.security.config.http.SessionCreationPolicy
@@ -13,7 +15,8 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @Configuration
 @EnableWebSecurity
 class SecurityConfig(
-    private val apiKeyFilter: ApiKeyFilter
+    private val apiKeyFilter: ApiKeyFilter,
+    private val jwtAuthenticationFilter: JwtAuthenticationFilter
 ) {
 
     @Bean
@@ -22,14 +25,31 @@ class SecurityConfig(
     }
 
     @Bean
+    fun authenticationManager(config: AuthenticationConfiguration): AuthenticationManager {
+        return config.authenticationManager
+    }
+
+    @Bean
     fun securityFilterChain(http: HttpSecurity): SecurityFilterChain {
         http
             .csrf { it.disable() }
             .authorizeHttpRequests {
-                it.anyRequest().permitAll()
+                // Public Endpointler (Giriş, Kayıt, Health Check)
+                it.requestMatchers(
+                    "/api/auth/**",
+                    "/actuator/health",
+                    "/v3/api-docs/**",
+                    "/swagger-ui/**"
+                ).permitAll()
+
+                // Diğer tüm istekler kimlik doğrulama gerektirir
+                it.anyRequest().authenticated()
+            }
+            .sessionManagement {
+                it.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
             }
             .addFilterBefore(apiKeyFilter, UsernamePasswordAuthenticationFilter::class.java)
-            .sessionManagement { it.sessionCreationPolicy(SessionCreationPolicy.STATELESS) }
+            .addFilterAfter(jwtAuthenticationFilter, ApiKeyFilter::class.java)
 
         return http.build()
     }
