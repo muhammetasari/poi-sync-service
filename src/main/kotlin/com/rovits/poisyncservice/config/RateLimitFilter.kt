@@ -10,6 +10,7 @@ import com.rovits.poisyncservice.util.MessageResolver
 import jakarta.servlet.FilterChain
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
 import org.springframework.stereotype.Component
@@ -20,15 +21,11 @@ class RateLimitFilter(
     private val rateLimitService: RateLimitService,
     private val jwtService: JwtService,
     private val objectMapper: ObjectMapper,
-    private val messageResolver: MessageResolver
+    private val messageResolver: MessageResolver,
+    @Value("\${rate.limit.anonymous:20}") private val anonymousLimit: Int,
+    @Value("\${rate.limit.authenticated:100}") private val authenticatedLimit: Int,
+    @Value("\${rate.limit.period.seconds:60}") private val periodSeconds: Long
 ) : OncePerRequestFilter() {
-
-    companion object {
-        // Limit Ayarları
-        private const val ANONYMOUS_LIMIT = 20
-        private const val AUTHENTICATED_LIMIT = 100
-        private const val PERIOD_SECONDS = 60L
-    }
 
     override fun doFilterInternal(
         request: HttpServletRequest,
@@ -52,14 +49,12 @@ class RateLimitFilter(
         } else null
 
         val (key, limit) = if (userEmail != null) {
-            // Giriş yapmış kullanıcı: Email bazlı limit
-            Pair("user:$userEmail", AUTHENTICATED_LIMIT)
+            Pair("user:$userEmail", authenticatedLimit)
         } else {
-            // Anonim kullanıcı: IP bazlı limit
-            Pair("ip:${getClientIp(request)}", ANONYMOUS_LIMIT)
+            Pair("ip:${getClientIp(request)}", anonymousLimit)
         }
 
-        if (rateLimitService.isRateLimitExceeded(key, limit, PERIOD_SECONDS)) {
+        if (rateLimitService.isRateLimitExceeded(key, limit, periodSeconds)) {
             writeTooManyRequestsResponse(response)
             return
         }

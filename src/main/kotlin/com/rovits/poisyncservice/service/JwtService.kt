@@ -68,4 +68,12 @@ class JwtService(
             .parseClaimsJws(token)
             .body
     }
+    fun getExpirationDateFromToken(token: String): Date? {
+        return try {
+            val claims = getClaims(token)
+            claims.expiration
+        } catch (e: Exception) {
+            null
+        }
+    }
 }

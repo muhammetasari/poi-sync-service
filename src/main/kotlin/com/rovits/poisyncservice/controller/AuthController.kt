@@ -2,6 +2,7 @@ package com.rovits.poisyncservice.controller
 
 import com.rovits.poisyncservice.domain.dto.AuthResponse
 import com.rovits.poisyncservice.domain.dto.LoginRequest
+import com.rovits.poisyncservice.domain.dto.LogoutRequest
 import com.rovits.poisyncservice.domain.dto.RegisterRequest
 import com.rovits.poisyncservice.domain.dto.SocialLoginRequest
 import com.rovits.poisyncservice.dto.response.ApiResponse
@@ -47,5 +48,24 @@ class AuthController(
         val authResponse = authService.login(request)
         logger.info("Login successful: email={}", authResponse.user.email)
         return ResponseHelper.ok(authResponse)
+    }
+
+    /**
+     * Kullanıcı çıkış işlemi.
+     * Access Token header'dan, Refresh Token body'den alınır.
+     */
+    @PostMapping("/logout")
+    fun logout(
+        @RequestHeader("Authorization") authHeader: String,
+        @RequestBody(required = false) request: LogoutRequest?
+    ): ResponseEntity<ApiResponse<Unit>> {
+        val accessToken = if (authHeader.startsWith("Bearer ")) {
+            authHeader.substring(7)
+        } else authHeader
+
+        logger.info("Logout request received")
+        authService.logout(accessToken, request?.refreshToken)
+
+        return ResponseHelper.ok()
     }
 }

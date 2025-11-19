@@ -1,6 +1,8 @@
 package com.rovits.poisyncservice.controller
 
+import com.rovits.poisyncservice.dto.response.ApiResponse
 import com.rovits.poisyncservice.service.LocationSyncService
+import com.rovits.poisyncservice.util.ResponseHelper
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -25,7 +27,7 @@ class LocationSyncController(
         @RequestParam lng: Double,
         @RequestParam(required = false, defaultValue = "5000.0") radius: Double,
         @RequestParam(required = false, defaultValue = "restaurant") type: String
-    ): ResponseEntity<String> {
+    ): ResponseEntity<ApiResponse<String>> {
         logger.info("Received sync request: lat={}, lng={}, radius={}, type={}", lat, lng, radius, type)
 
         controllerScope.launch {
@@ -36,6 +38,6 @@ class LocationSyncController(
             }
         }
 
-        return ResponseEntity.accepted().body("Synchronization started")
+        return ResponseHelper.accepted("Synchronization started")
     }
 }

@@ -14,9 +14,32 @@ import org.springframework.transaction.annotation.Transactional
 class AuthService(
     private val userRepository: UserRepository,
     private val jwtService: JwtService,
-    private val passwordEncoder: PasswordEncoder
+    private val passwordEncoder: PasswordEncoder,
+    private val tokenBlacklistService: TokenBlacklistService // YENİ: Inject edildi
 ) {
     private val logger = LoggerFactory.getLogger(AuthService::class.java)
+
+    /**
+     * Kullanıcı çıkış işlemi.
+     * Access Token ve (opsiyonel) Refresh Token'ı kara listeye alır.
+     */
+    fun logout(accessToken: String, refreshToken: String?) {
+        // 1. Access Token'ı blacklist'e al
+        val accessExpiry = jwtService.getExpirationDateFromToken(accessToken)
+        if (accessExpiry != null) {
+            tokenBlacklistService.blacklistToken(accessToken, accessExpiry.time)
+            logger.info("Access token blacklisted")
+        }
+
+        // 2. Refresh Token varsa onu da blacklist'e al
+        if (!refreshToken.isNullOrBlank()) {
+            val refreshExpiry = jwtService.getExpirationDateFromToken(refreshToken)
+            if (refreshExpiry != null) {
+                tokenBlacklistService.blacklistToken(refreshToken, refreshExpiry.time)
+                logger.info("Refresh token blacklisted")
+            }
+        }
+    }
 
     @Transactional
     fun socialLogin(request: SocialLoginRequest): AuthResponse {

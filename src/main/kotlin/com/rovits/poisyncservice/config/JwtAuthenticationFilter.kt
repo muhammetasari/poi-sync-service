@@ -14,7 +14,8 @@ import org.springframework.web.filter.OncePerRequestFilter
 @Component
 class JwtAuthenticationFilter(
     private val jwtService: JwtService,
-    private val userDetailsService: CustomUserDetailsService
+    private val userDetailsService: CustomUserDetailsService,
+    private val tokenBlacklistService: com.rovits.poisyncservice.service.TokenBlacklistService
 ) : OncePerRequestFilter() {
 
     override fun doFilterInternal(
@@ -22,7 +23,6 @@ class JwtAuthenticationFilter(
         response: HttpServletResponse,
         filterChain: FilterChain
     ) {
-        // 1. Authorization header'ı al
         val authHeader = request.getHeader("Authorization")
 
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
@@ -30,26 +30,25 @@ class JwtAuthenticationFilter(
             return
         }
 
-        // 2. Token'ı ayıkla
         val token = authHeader.substring(7)
+
+        if (tokenBlacklistService.isTokenBlacklisted(token)) {
+            filterChain.doFilter(request, response)
+            return
+        }
+
         val email = jwtService.getEmailFromToken(token)
 
-        // 3. Email geçerliyse ve context henüz set edilmemişse doğrula
         if (email != null && SecurityContextHolder.getContext().authentication == null) {
-            // Token formatı ve süresi geçerli mi? (JwtService içindeki validateToken)
             if (jwtService.validateToken(token)) {
-                // Kullanıcıyı veritabanından yükle (isteğe bağlı, sadece token claimleri de kullanılabilir)
                 val userDetails = userDetailsService.loadUserByUsername(email)
 
-                // Güvenli oturum nesnesi oluştur
                 val authToken = UsernamePasswordAuthenticationToken(
                     userDetails,
                     null,
                     userDetails.authorities
                 )
                 authToken.details = WebAuthenticationDetailsSource().buildDetails(request)
-
-                // Context'e işle
                 SecurityContextHolder.getContext().authentication = authToken
             }
         }

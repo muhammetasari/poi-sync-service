@@ -65,3 +65,7 @@ data class UserDto(
     val email: String,
     val name: String?
 )
+
+data class LogoutRequest(
+    val refreshToken: String?
+)
