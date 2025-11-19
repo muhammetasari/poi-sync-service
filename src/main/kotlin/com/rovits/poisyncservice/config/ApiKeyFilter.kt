@@ -26,7 +26,13 @@ class ApiKeyFilter(
         response: HttpServletResponse,
         filterChain: FilterChain
     ) {
-        if (request.requestURI.startsWith("/actuator/health")) {
+        val path = request.requestURI
+
+        if (path.startsWith("/actuator/health") ||
+            path.startsWith("/v3/api-docs") ||
+            path.startsWith("/swagger-ui") ||
+            path == "/swagger-ui.html"
+        ) {
             filterChain.doFilter(request, response)
             return
         }
@@ -34,7 +40,6 @@ class ApiKeyFilter(
         val providedKey = request.getHeader(apiKeyHeader)
 
         if (providedKey == null || providedKey != apiKeyValue) {
-            // Standart Error Response Formatı
             response.status = HttpServletResponse.SC_UNAUTHORIZED
             response.contentType = MediaType.APPLICATION_JSON_VALUE
             response.characterEncoding = "UTF-8"

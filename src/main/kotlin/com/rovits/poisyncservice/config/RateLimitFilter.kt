@@ -35,8 +35,13 @@ class RateLimitFilter(
         response: HttpServletResponse,
         filterChain: FilterChain
     ) {
-        // Health check endpoint'ini atla
-        if (request.requestURI.startsWith("/actuator/health")) {
+        val path = request.requestURI
+
+        if (path.startsWith("/actuator/health") ||
+            path.startsWith("/v3/api-docs") ||
+            path.startsWith("/swagger-ui") ||
+            path == "/swagger-ui.html"
+        ) {
             filterChain.doFilter(request, response)
             return
         }
