@@ -6,6 +6,7 @@ import com.rovits.poisyncservice.domain.dto.*
 import com.rovits.poisyncservice.domain.enums.UserRole
 import com.rovits.poisyncservice.exception.*
 import com.rovits.poisyncservice.repository.UserRepository
+import com.rovits.poisyncservice.util.MessageKeys
 import org.slf4j.LoggerFactory
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service
@@ -20,7 +21,6 @@ class AuthService(
 ) {
     private val logger = LoggerFactory.getLogger(AuthService::class.java)
 
-    // ... logout methodu aynı kalacak ...
     fun logout(accessToken: String, refreshToken: String?) {
         val accessExpiry = jwtService.getExpirationDateFromToken(accessToken)
         if (accessExpiry != null) {
@@ -46,7 +46,7 @@ class AuthService(
             logger.error("Invalid Firebase token", e)
             throw ExternalServiceException(
                 errorCode = ErrorCodes.FIREBASE_TOKEN_INVALID,
-                messageKey = "error.firebase.token.invalid",
+                messageKey = MessageKeys.FIREBASE_TOKEN_INVALID,
                 serviceName = "Firebase",
                 cause = e
             )
@@ -54,7 +54,7 @@ class AuthService(
 
         val email = decodedToken.email ?: throw ValidationException(
             errorCode = ErrorCodes.FIELD_REQUIRED,
-            messageKey = "error.validation.required",
+            messageKey = MessageKeys.VALIDATION_REQUIRED,
             messageArgs = arrayOf("email"),
             fieldName = "email"
         )
@@ -85,7 +85,7 @@ class AuthService(
             logger.warn("Registration failed: Email already exists - {}", request.email)
             throw BusinessException(
                 errorCode = ErrorCodes.USER_ALREADY_EXISTS,
-                messageKey = "error.user.already.exists",
+                messageKey = MessageKeys.USER_ALREADY_EXISTS,
                 messageArgs = arrayOf(request.email)
             )
         }
@@ -115,7 +115,7 @@ class AuthService(
                 logger.warn("Login failed: User not found - {}", request.email)
                 AuthenticationException(
                     errorCode = ErrorCodes.INVALID_CREDENTIALS,
-                    messageKey = "error.invalid.credentials"
+                    messageKey = MessageKeys.INVALID_CREDENTIALS
                 )
             }
 
@@ -123,7 +123,7 @@ class AuthService(
             logger.warn("Login failed: Wrong provider ({}) - {}", user.provider, request.email)
             throw AuthenticationException(
                 errorCode = ErrorCodes.INVALID_CREDENTIALS,
-                messageKey = "error.invalid.credentials"
+                messageKey = MessageKeys.INVALID_CREDENTIALS
             )
         }
 
@@ -131,7 +131,7 @@ class AuthService(
             logger.warn("Login failed: Wrong password - {}", request.email)
             throw AuthenticationException(
                 errorCode = ErrorCodes.INVALID_CREDENTIALS,
-                messageKey = "error.invalid.credentials"
+                messageKey = MessageKeys.INVALID_CREDENTIALS
             )
         }
 

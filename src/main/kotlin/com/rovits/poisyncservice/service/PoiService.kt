@@ -6,7 +6,8 @@ import com.rovits.poisyncservice.domain.document.PoiDocument
 import com.rovits.poisyncservice.domain.document.PoiOpeningHours
 import com.rovits.poisyncservice.domain.dto.*
 import com.rovits.poisyncservice.repository.PoiRepository
-import com.rovits.poisyncservice.util.MessageResolver // YENİ: Eklendi
+import com.rovits.poisyncservice.util.MessageKeys
+import com.rovits.poisyncservice.util.MessageResolver
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.slf4j.LoggerFactory
@@ -25,7 +26,7 @@ class PoiService(
     private val poiRepository: PoiRepository,
     private val redisTemplate: StringRedisTemplate,
     private val objectMapper: ObjectMapper,
-    private val messageResolver: MessageResolver // YENİ: Inject edildi
+    private val messageResolver: MessageResolver
 ) {
     private val logger = LoggerFactory.getLogger(PoiService::class.java)
 
@@ -36,8 +37,6 @@ class PoiService(
 
     suspend fun searchNearby(lat: Double, lng: Double, radius: Double, type: String): SearchNearbyResponse {
         val cacheKey = "search:nearby:${round(lat)}:${round(lng)}:$radius:$type"
-
-        // Kullanıcının o anki dilini al (Request Header'dan)
         val currentLang = messageResolver.getCurrentLocale().language
 
         getCached<SearchNearbyResponse>(cacheKey)?.let { return it }
@@ -48,7 +47,6 @@ class PoiService(
 
             if (localPois.isNotEmpty()) {
                 logger.info("Source: MongoDB (Count: ${localPois.size})")
-                // YENİ: Dil kodunu map fonksiyonuna gönderiyoruz
                 val response = mapToNearbyResponse(localPois, currentLang)
                 cacheToRedis(cacheKey, response)
                 return@withContext response
@@ -99,7 +97,7 @@ class PoiService(
 
                 val details = PlaceDetails(
                     id = doc.placeId,
-                    displayName = DisplayName(doc.name, currentLang), // YENİ: Dinamik dil
+                    displayName = DisplayName(doc.name, currentLang),
                     formattedAddress = doc.address,
                     location = doc.location?.let { Location(it.y, it.x) },
                     openingHours = doc.openingHours?.let {
@@ -154,44 +152,42 @@ class PoiService(
         return value.toBigDecimal().setScale(4, RoundingMode.HALF_UP).toDouble()
     }
 
-    // ================= MAPPERS (GÜNCELLENDİ: i18n Destekli) =================
+    // ================= MAPPERS =================
 
-    // YENİ: Varsayılan metinleri MessageResolver'dan alıyoruz
-    private fun getUnknownName() = messageResolver.resolve("poi.unknown.name")
-    private fun getUnknownAddress() = messageResolver.resolve("poi.unknown.address")
+    private fun getUnknownName() = messageResolver.resolve(MessageKeys.POI_UNKNOWN_NAME)
+    private fun getUnknownAddress() = messageResolver.resolve(MessageKeys.POI_UNKNOWN_ADDRESS)
 
     private fun NearbyPlace.toDocument() = PoiDocument(
         placeId = this.id,
-        name = this.displayName?.text ?: getUnknownName(), // YENİ
-        address = getUnknownAddress(), // YENİ
+        name = this.displayName?.text ?: getUnknownName(),
+        address = getUnknownAddress(),
         location = this.location?.let { GeoJsonPoint(it.longitude, it.latitude) },
         openingHours = null
     )
 
     private fun TextSearchPlace.toDocument() = PoiDocument(
         placeId = this.id,
-        name = this.displayName?.text ?: getUnknownName(), // YENİ
-        address = this.formattedAddress ?: getUnknownAddress(), // YENİ
+        name = this.displayName?.text ?: getUnknownName(),
+        address = this.formattedAddress ?: getUnknownAddress(),
         location = this.location?.let { GeoJsonPoint(it.longitude, it.latitude) },
         openingHours = null
     )
 
     private fun PlaceDetails.toDocument() = PoiDocument(
         placeId = this.id,
-        name = this.displayName?.text ?: getUnknownName(), // YENİ
-        address = this.formattedAddress ?: getUnknownAddress(), // YENİ
+        name = this.displayName?.text ?: getUnknownName(),
+        address = this.formattedAddress ?: getUnknownAddress(),
         location = this.location?.let { GeoJsonPoint(it.longitude, it.latitude) },
         openingHours = this.openingHours?.let {
             PoiOpeningHours(it.openNow, it.weekdayDescriptions)
         }
     )
 
-    // YENİ: currentLang parametresi eklendi
     private fun mapToNearbyResponse(docs: List<PoiDocument>, currentLang: String): SearchNearbyResponse {
         val places = docs.map { doc ->
             NearbyPlace(
                 id = doc.placeId,
-                displayName = DisplayName(doc.name, currentLang), // YENİ: "tr" yerine dinamik dil
+                displayName = DisplayName(doc.name, currentLang),
                 location = doc.location?.let { Location(it.y, it.x) }
             )
         }

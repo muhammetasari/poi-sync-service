@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.rovits.poisyncservice.dto.response.ApiResponse
 import com.rovits.poisyncservice.dto.response.ErrorDetail
 import com.rovits.poisyncservice.exception.ErrorCodes
+import com.rovits.poisyncservice.util.MessageKeys
 import com.rovits.poisyncservice.util.MessageResolver
 import jakarta.servlet.FilterChain
 import jakarta.servlet.http.HttpServletRequest
@@ -44,7 +45,7 @@ class ApiKeyFilter(
             response.contentType = MediaType.APPLICATION_JSON_VALUE
             response.characterEncoding = "UTF-8"
 
-            val message = messageResolver.resolve("error.unauthorized")
+            val message = messageResolver.resolve(MessageKeys.UNAUTHORIZED)
 
             val errorDetail = ErrorDetail.of(
                 ErrorCodes.UNAUTHORIZED,

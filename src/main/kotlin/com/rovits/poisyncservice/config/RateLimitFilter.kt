@@ -6,6 +6,7 @@ import com.rovits.poisyncservice.dto.response.ErrorDetail
 import com.rovits.poisyncservice.exception.ErrorCodes
 import com.rovits.poisyncservice.service.JwtService
 import com.rovits.poisyncservice.service.RateLimitService
+import com.rovits.poisyncservice.util.MessageKeys
 import com.rovits.poisyncservice.util.MessageResolver
 import jakarta.servlet.FilterChain
 import jakarta.servlet.http.HttpServletRequest
@@ -83,7 +84,7 @@ class RateLimitFilter(
         response.contentType = MediaType.APPLICATION_JSON_VALUE
         response.characterEncoding = "UTF-8"
 
-        val message = messageResolver.resolve("error.too.many.requests")
+        val message = messageResolver.resolve(MessageKeys.TOO_MANY_REQUESTS)
 
         val errorDetail = ErrorDetail.of(
             ErrorCodes.RATE_LIMIT_EXCEEDED,

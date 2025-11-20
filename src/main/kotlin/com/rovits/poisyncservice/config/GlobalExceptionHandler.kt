@@ -3,10 +3,11 @@ package com.rovits.poisyncservice.config
 import com.rovits.poisyncservice.dto.response.ApiResponse
 import com.rovits.poisyncservice.dto.response.ErrorDetail
 import com.rovits.poisyncservice.dto.response.FieldError
-import com.rovits.poisyncservice.dto.response.ValidationErrorResponse
 import com.rovits.poisyncservice.exception.*
+import com.rovits.poisyncservice.util.MessageKeys
 import com.rovits.poisyncservice.util.MessageResolver
 import com.rovits.poisyncservice.util.ResponseHelper
+import jakarta.servlet.http.HttpServletRequest
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.dao.DataAccessException
@@ -23,12 +24,8 @@ import org.springframework.web.bind.annotation.RestControllerAdvice
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException
 import org.springframework.web.reactive.function.client.WebClientException
 import org.springframework.web.reactive.function.client.WebClientResponseException
+import java.net.URI
 
-/**
- * Global exception handler for the entire application.
- * Catches all exceptions and converts them to standardized API responses with i18n support.
- * * Now manages HTTP status codes centrally, decoupling services from HTTP logic.
- */
 @RestControllerAdvice
 class GlobalExceptionHandler(
     private val messageResolver: MessageResolver,
@@ -43,12 +40,8 @@ class GlobalExceptionHandler(
     // CUSTOM EXCEPTIONS
     // ========================================
 
-    /**
-     * Handles all custom exceptions (BaseException and its subclasses)
-     * Resolves i18n messages and determines HTTP status based on exception type.
-     */
     @ExceptionHandler(BaseException::class)
-    fun handleBaseException(ex: BaseException): ResponseEntity<ApiResponse<Nothing>> {
+    fun handleBaseException(ex: BaseException, request: HttpServletRequest): ResponseEntity<ApiResponse<Nothing>> {
         logger.warn("Business exception occurred: errorCode={}, messageKey={}", ex.errorCode, ex.messageKey, ex)
 
         val localizedMessage = if (ex.messageArgs != null) {
@@ -62,14 +55,13 @@ class GlobalExceptionHandler(
                 code = ex.errorCode,
                 message = localizedMessage,
                 field = ex.fieldName ?: "unknown"
-            )
+            ).copy(instance = request.requestURI, type = URI.create("urn:problem-type:validation"))
             else -> ErrorDetail.of(
                 code = ex.errorCode,
                 message = localizedMessage
-            )
+            ).copy(instance = request.requestURI, type = URI.create("urn:problem-type:business"))
         }
 
-        // Determine HTTP status based on exception type
         val httpStatus = when (ex) {
             is ResourceNotFoundException -> HttpStatus.NOT_FOUND
             is AuthenticationException -> HttpStatus.UNAUTHORIZED
@@ -88,18 +80,15 @@ class GlobalExceptionHandler(
     // SPRING VALIDATION ERRORS
     // ========================================
 
-    /**
-     * Handles Bean Validation errors (@Valid annotation)
-     */
     @ExceptionHandler(MethodArgumentNotValidException::class)
     fun handleValidationException(
         ex: MethodArgumentNotValidException
-    ): ResponseEntity<ValidationErrorResponse> {
+    ): ResponseEntity<ApiResponse<Nothing>> {
         logger.warn("Validation failed: {} field errors", ex.bindingResult.errorCount)
 
         val fieldErrors = ex.bindingResult.fieldErrors.map { fieldError ->
             val localizedMessage = messageResolver.resolveOrDefault(
-                messageKey = fieldError.defaultMessage ?: "error.validation.failed",
+                messageKey = fieldError.defaultMessage ?: MessageKeys.VALIDATION_FAILED,
                 defaultMessage = fieldError.defaultMessage ?: "Validation failed",
                 fieldError.rejectedValue ?: ""
             )
@@ -111,7 +100,7 @@ class GlobalExceptionHandler(
             )
         }
 
-        val generalMessage = messageResolver.resolve("error.validation.failed")
+        val generalMessage = messageResolver.resolve(MessageKeys.VALIDATION_FAILED)
 
         return ResponseHelper.validationError(
             code = ErrorCodes.VALIDATION_FAILED,
@@ -121,7 +110,7 @@ class GlobalExceptionHandler(
     }
 
     @ExceptionHandler(BindException::class)
-    fun handleBindException(ex: BindException): ResponseEntity<ValidationErrorResponse> {
+    fun handleBindException(ex: BindException): ResponseEntity<ApiResponse<Nothing>> {
         logger.warn("Bind exception occurred: {} field errors", ex.bindingResult.errorCount)
 
         val fieldErrors = ex.bindingResult.fieldErrors.map { fieldError ->
@@ -134,7 +123,7 @@ class GlobalExceptionHandler(
 
         return ResponseHelper.validationError(
             code = ErrorCodes.VALIDATION_FAILED,
-            message = messageResolver.resolve("error.validation.failed"),
+            message = messageResolver.resolve(MessageKeys.VALIDATION_FAILED),
             errors = fieldErrors
         )
     }
@@ -150,7 +139,7 @@ class GlobalExceptionHandler(
         logger.warn("Missing request parameter: {}", ex.parameterName)
 
         val message = messageResolver.resolve(
-            "error.validation.required",
+            MessageKeys.VALIDATION_REQUIRED,
             ex.parameterName
         )
 
@@ -158,7 +147,7 @@ class GlobalExceptionHandler(
             code = ErrorCodes.FIELD_REQUIRED,
             message = message,
             field = ex.parameterName
-        )
+        ).copy(type = URI.create("urn:problem-type:validation"))
 
         return ResponseHelper.badRequest(errorDetail)
     }
@@ -175,7 +164,7 @@ class GlobalExceptionHandler(
             code = ErrorCodes.VALIDATION_FAILED,
             message = message,
             field = ex.name
-        )
+        ).copy(type = URI.create("urn:problem-type:validation"))
 
         return ResponseHelper.badRequest(errorDetail)
     }
@@ -191,7 +180,7 @@ class GlobalExceptionHandler(
         val errorDetail = ErrorDetail.of(
             code = ErrorCodes.VALIDATION_FAILED,
             message = message
-        )
+        ).copy(type = URI.create("urn:problem-type:validation"))
 
         return ResponseHelper.badRequest(errorDetail)
     }
@@ -204,7 +193,7 @@ class GlobalExceptionHandler(
     fun handleAccessDenied(ex: AccessDeniedException): ResponseEntity<ApiResponse<Nothing>> {
         logger.warn("Access denied: {}", ex.message)
 
-        val message = messageResolver.resolve("error.access.denied", "REQUIRED_PERMISSION")
+        val message = messageResolver.resolve(MessageKeys.ACCESS_DENIED, "REQUIRED_PERMISSION")
 
         val errorDetail = ErrorDetail.of(
             code = ErrorCodes.ACCESS_DENIED,
@@ -220,7 +209,7 @@ class GlobalExceptionHandler(
     ): ResponseEntity<ApiResponse<Nothing>> {
         logger.warn("Authentication failed: {}", ex.message)
 
-        val message = messageResolver.resolve("error.unauthorized")
+        val message = messageResolver.resolve(MessageKeys.UNAUTHORIZED)
 
         val errorDetail = ErrorDetail.of(
             code = ErrorCodes.UNAUTHORIZED,
@@ -238,7 +227,7 @@ class GlobalExceptionHandler(
     fun handleDuplicateKey(ex: DuplicateKeyException): ResponseEntity<ApiResponse<Nothing>> {
         logger.warn("Duplicate key error: {}", ex.message)
 
-        val message = messageResolver.resolve("error.database.duplicate.key")
+        val message = messageResolver.resolve(MessageKeys.DATABASE_DUPLICATE_KEY)
 
         val errorDetail = ErrorDetail.of(
             code = ErrorCodes.DUPLICATE_KEY_ERROR,
@@ -252,7 +241,7 @@ class GlobalExceptionHandler(
     fun handleDataAccessException(ex: DataAccessException): ResponseEntity<ApiResponse<Nothing>> {
         logger.error("Database error occurred", ex)
 
-        val message = messageResolver.resolve("error.database.failed")
+        val message = messageResolver.resolve(MessageKeys.DATABASE_FAILED)
 
         val errorDetail = if (isDevelopment) {
             ErrorDetail.withDetails(
@@ -283,7 +272,7 @@ class GlobalExceptionHandler(
     ): ResponseEntity<ApiResponse<Nothing>> {
         logger.error("External API error: status={}, body={}", ex.statusCode, ex.responseBodyAsString)
 
-        val message = messageResolver.resolve("error.google.api.failed")
+        val message = messageResolver.resolve(MessageKeys.GOOGLE_API_FAILED)
 
         val errorDetail = if (isDevelopment) {
             ErrorDetail.withDetails(
@@ -308,7 +297,7 @@ class GlobalExceptionHandler(
     fun handleWebClientException(ex: WebClientException): ResponseEntity<ApiResponse<Nothing>> {
         logger.error("External service connection error", ex)
 
-        val message = messageResolver.resolve("error.external.service.timeout", "External Service")
+        val message = messageResolver.resolve(MessageKeys.EXTERNAL_SERVICE_TIMEOUT, "External Service")
 
         val errorDetail = ErrorDetail.of(
             code = ErrorCodes.EXTERNAL_SERVICE_TIMEOUT,
@@ -323,10 +312,10 @@ class GlobalExceptionHandler(
     // ========================================
 
     @ExceptionHandler(Exception::class)
-    fun handleGenericException(ex: Exception): ResponseEntity<ApiResponse<Nothing>> {
+    fun handleGenericException(ex: Exception, request: HttpServletRequest): ResponseEntity<ApiResponse<Nothing>> {
         logger.error("Unexpected error occurred", ex)
 
-        val message = messageResolver.resolve("error.internal.server")
+        val message = messageResolver.resolve(MessageKeys.INTERNAL_SERVER_ERROR)
 
         val errorDetail = if (isDevelopment) {
             ErrorDetail.withDetails(
@@ -345,6 +334,8 @@ class GlobalExceptionHandler(
             )
         }
 
-        return ResponseHelper.internalServerError(errorDetail)
+        val finalError = errorDetail.copy(instance = request.requestURI, type = URI.create("urn:problem-type:server-error"))
+
+        return ResponseHelper.internalServerError(finalError)
     }
 }

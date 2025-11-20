@@ -7,6 +7,7 @@ import com.rovits.poisyncservice.exception.ErrorCodes
 import com.rovits.poisyncservice.exception.ExternalServiceException
 import com.rovits.poisyncservice.exception.ValidationException
 import com.rovits.poisyncservice.repository.PoiRepository
+import com.rovits.poisyncservice.util.MessageKeys
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
@@ -34,7 +35,6 @@ class LocationSyncService(
 
         withContext(Dispatchers.IO) {
             try {
-                // ... (Kalan kodlar aynı) ...
                 // Step 1: Search nearby places
                 val nearbyPlaces = apiClient.searchNearby(lat, lng, radius, type).places ?: emptyList()
 
@@ -45,6 +45,7 @@ class LocationSyncService(
 
                 logger.info("Found {} places, fetching details", nearbyPlaces.size)
 
+                // Step 2: Fetch details in parallel
                 val detailedPlaces = coroutineScope {
                     nearbyPlaces.map { place ->
                         async {
@@ -58,8 +59,10 @@ class LocationSyncService(
                     }
                 }
 
+                // Step 3: Filter successful results
                 val successfulDetails = detailedPlaces.mapNotNull { it.await() }
 
+                // Step 4: Upsert to MongoDB
                 successfulDetails.forEach { details ->
                     val newDoc = PoiDocument(
                         placeId = details.id,
@@ -73,7 +76,9 @@ class LocationSyncService(
                             )
                         }
                     )
+
                     val existing = poiRepository.findByPlaceId(details.id)
+
                     if (existing.isPresent) {
                         poiRepository.save(newDoc)
                     } else {
@@ -84,7 +89,7 @@ class LocationSyncService(
                 logger.error("POI sync failed", e)
                 throw ExternalServiceException(
                     errorCode = ErrorCodes.POI_SYNC_FAILED,
-                    messageKey = "error.poi.sync.failed",
+                    messageKey = MessageKeys.POI_SYNC_FAILED,
                     serviceName = "LocationSync",
                     cause = e
                 )
@@ -96,7 +101,7 @@ class LocationSyncService(
         if (lat < -90 || lat > 90) {
             throw ValidationException(
                 errorCode = ErrorCodes.INVALID_LATITUDE,
-                messageKey = "error.validation.latitude",
+                messageKey = MessageKeys.VALIDATION_LATITUDE,
                 messageArgs = arrayOf(lat),
                 fieldName = "latitude"
             )
@@ -105,7 +110,7 @@ class LocationSyncService(
         if (lng < -180 || lng > 180) {
             throw ValidationException(
                 errorCode = ErrorCodes.INVALID_LONGITUDE,
-                messageKey = "error.validation.longitude",
+                messageKey = MessageKeys.VALIDATION_LONGITUDE,
                 messageArgs = arrayOf(lng),
                 fieldName = "longitude"
             )
@@ -116,7 +121,7 @@ class LocationSyncService(
         if (radius <= 0) {
             throw ValidationException(
                 errorCode = ErrorCodes.INVALID_RADIUS,
-                messageKey = "error.validation.radius",
+                messageKey = MessageKeys.VALIDATION_RADIUS,
                 messageArgs = arrayOf(radius),
                 fieldName = "radius"
             )

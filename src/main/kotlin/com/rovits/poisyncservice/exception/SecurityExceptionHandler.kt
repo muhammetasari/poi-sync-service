@@ -3,6 +3,7 @@ package com.rovits.poisyncservice.exception
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.rovits.poisyncservice.dto.response.ApiResponse
 import com.rovits.poisyncservice.dto.response.ErrorDetail
+import com.rovits.poisyncservice.util.MessageKeys
 import com.rovits.poisyncservice.util.MessageResolver
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
@@ -25,7 +26,7 @@ class SecurityExceptionHandler(
         response: HttpServletResponse,
         authException: AuthenticationException
     ) {
-        val message = messageResolver.resolve("error.unauthorized")
+        val message = messageResolver.resolve(MessageKeys.UNAUTHORIZED)
         val errorDetail = ErrorDetail.of(ErrorCodes.UNAUTHORIZED, message)
         writeResponse(response, HttpServletResponse.SC_UNAUTHORIZED, errorDetail)
     }
@@ -36,7 +37,7 @@ class SecurityExceptionHandler(
         response: HttpServletResponse,
         accessDeniedException: AccessDeniedException
     ) {
-        val message = messageResolver.resolve("error.access.denied", "Unknown")
+        val message = messageResolver.resolve(MessageKeys.ACCESS_DENIED, "Unknown")
         val errorDetail = ErrorDetail.of(ErrorCodes.ACCESS_DENIED, message)
         writeResponse(response, HttpServletResponse.SC_FORBIDDEN, errorDetail)
     }
