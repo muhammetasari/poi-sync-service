@@ -27,12 +27,14 @@ services:
 
       # API Key
       API_SECRET_KEY: ${API_SECRET_KEY}
+      JWT_SECRET: ${JWT_SECRET}
+      SPRING_PROFILES_ACTIVE: docker
 
-      # JWT (opsiyonel)
-      JWT_SECRET: ${JWT_SECRET:-default-secret-change-in-production}
+      GRAFANA_OTLP_ENDPOINT: ${GRAFANA_OTLP_ENDPOINT}
+      GRAFANA_API_TOKEN_BASE64: ${GRAFANA_API_TOKEN_BASE64}
 
-      # Spring profile
-      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-docker}
+      # Actuator Ayarı
+      MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE: "health,info,metrics,prometheus"
 
       # Logging
       LOGGING_LEVEL_COM_ROVITS: ${LOGGING_LEVEL_COM_ROVITS:-INFO}

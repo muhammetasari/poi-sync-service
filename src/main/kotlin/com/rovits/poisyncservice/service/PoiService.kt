@@ -8,6 +8,9 @@ import com.rovits.poisyncservice.domain.dto.*
 import com.rovits.poisyncservice.repository.PoiRepository
 import com.rovits.poisyncservice.util.MessageKeys
 import com.rovits.poisyncservice.util.MessageResolver
+import io.micrometer.core.instrument.Counter
+import io.micrometer.core.instrument.MeterRegistry
+import io.micrometer.core.instrument.Timer
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.slf4j.LoggerFactory
@@ -26,9 +29,25 @@ class PoiService(
     private val poiRepository: PoiRepository,
     private val redisTemplate: StringRedisTemplate,
     private val objectMapper: ObjectMapper,
-    private val messageResolver: MessageResolver
+    private val messageResolver: MessageResolver,
+    private val meterRegistry: MeterRegistry
 ) {
     private val logger = LoggerFactory.getLogger(PoiService::class.java)
+
+    // ===================================
+    // CUSTOM METRICS DEFINITIONS
+    // ===================================
+    private val cacheHitCounter = Counter.builder("poi.cache.hit")
+        .description("Number of cache hits for POI searches")
+        .register(meterRegistry)
+
+    private val cacheMissCounter = Counter.builder("poi.cache.miss")
+        .description("Number of cache misses for POI searches")
+        .register(meterRegistry)
+
+    private val googleApiTimer = Timer.builder("poi.external.google.latency")
+        .description("Latency of Google Places API calls")
+        .register(meterRegistry)
 
     companion object {
         private const val REDIS_TTL_MINUTES = 10L
@@ -39,11 +58,17 @@ class PoiService(
         val cacheKey = "search:nearby:${round(lat)}:${round(lng)}:$radius:$type"
         val currentLang = messageResolver.getCurrentLocale().language
 
-        getCached<SearchNearbyResponse>(cacheKey)?.let { return it }
+        // Cache Kontrolü ve Metrik Kaydı
+        getCached<SearchNearbyResponse>(cacheKey)?.let {
+            cacheHitCounter.increment() // HIT Metric
+            return it
+        }
+        cacheMissCounter.increment() // MISS Metric
 
         return withContext(Dispatchers.IO) {
             val distance = Distance(radius / 1000.0, Metrics.KILOMETERS)
 
+            // MongoDB Local Search
             val localPois = poiRepository.findByLocationNearAndType(Point(lng, lat), distance, type)
 
             if (localPois.isNotEmpty()) {
@@ -54,7 +79,13 @@ class PoiService(
             }
 
             logger.info("Source: Google API")
-            val googleResponse = googleClient.searchNearby(lat, lng, radius, type)
+
+            val sample = Timer.start(meterRegistry)
+            val googleResponse = try {
+                googleClient.searchNearby(lat, lng, radius, type)
+            } finally {
+                sample.stop(googleApiTimer) // Süreyi kaydet
+            }
 
             googleResponse.places?.let { savePlacesAsync(it, type) }
             cacheToRedis(cacheKey, googleResponse)
@@ -71,7 +102,7 @@ class PoiService(
         val response = googleClient.searchText(query, lang, max, bias)
 
         response.places?.let { places ->
-            val docs = places.map { it.toDocument() } // Text search sonucunda tip garantisi olmadığı için type=null olabilir
+            val docs = places.map { it.toDocument() }
             try {
                 poiRepository.saveAll(docs)
             } catch (e: Exception) {

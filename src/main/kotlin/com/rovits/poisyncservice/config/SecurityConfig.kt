@@ -45,7 +45,7 @@ class SecurityConfig(
                 // 1. Herkese Açık (Public)
                 it.requestMatchers(
                     "/api/auth/**",
-                    "/actuator/health",
+                    "/actuator/**",
                     "/v3/api-docs/**",
                     "/swagger-ui.html",
                     "/swagger-ui/**",

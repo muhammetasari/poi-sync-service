@@ -35,7 +35,7 @@ class RateLimitFilter(
     ) {
         val path = request.requestURI
 
-        if (path.startsWith("/actuator/health") ||
+        if (path.startsWith("/actuator") ||
             path.startsWith("/v3/api-docs") ||
             path.startsWith("/swagger-ui") ||
             path == "/swagger-ui.html"
