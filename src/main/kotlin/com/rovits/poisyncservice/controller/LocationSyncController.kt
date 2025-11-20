@@ -5,6 +5,8 @@ import com.rovits.poisyncservice.service.LocationSyncService
 import com.rovits.poisyncservice.util.ResponseHelper
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.annotations.media.Content
+import io.swagger.v3.oas.annotations.media.Schema
 import io.swagger.v3.oas.annotations.responses.ApiResponses
 import io.swagger.v3.oas.annotations.responses.ApiResponse as SwaggerApiResponse
 import io.swagger.v3.oas.annotations.tags.Tag
@@ -20,7 +22,7 @@ import org.springframework.web.bind.annotation.RestController
 
 @RestController
 @RequestMapping("/api/sync")
-@Tag(name = "Location Sync", description = "POI Veri Senkronizasyonu Yönetimi")
+@Tag(name = "Location Sync API", description = "Management endpoints for triggering POI data synchronization from Google Maps to local database.")
 class LocationSyncController(
     private val syncService: LocationSyncService
 ) {
@@ -28,33 +30,57 @@ class LocationSyncController(
     private val controllerScope = CoroutineScope(Dispatchers.IO)
 
     @Operation(
-        summary = "Konum Bazlı Senkronizasyon Başlat",
-        description = "Belirtilen koordinatlar ve yarıçap içerisindeki mekanları Google Places API'den çeker ve veritabanına kaydeder. İşlem asenkron olarak arka planda yürütülür."
+        summary = "Start Location Sync",
+        description = "Triggers an asynchronous background process to fetch places from Google API within the given radius and upsert them into the local MongoDB. This endpoint returns immediately with 'Accepted' status."
     )
     @ApiResponses(
         value = [
-            SwaggerApiResponse(responseCode = "202", description = "Senkronizasyon işlemi başarıyla kuyruğa alındı/başlatıldı"),
-            SwaggerApiResponse(responseCode = "400", description = "Geçersiz koordinat veya parametre hatası"),
-            SwaggerApiResponse(responseCode = "401", description = "Yetkisiz erişim (API Key veya Token eksik)"),
-            SwaggerApiResponse(responseCode = "500", description = "Sunucu içi hata")
+            SwaggerApiResponse(
+                responseCode = "202",
+                description = "Synchronization successfully started/queued",
+                content = [Content(mediaType = "application/json", schema = Schema(implementation = ApiResponse::class))]
+            ),
+            SwaggerApiResponse(
+                responseCode = "400",
+                description = "Validation failed (e.g., invalid coordinates or radius)",
+                content = [Content(schema = Schema(implementation = ApiResponse::class))]
+            ),
+            SwaggerApiResponse(
+                responseCode = "401",
+                description = "Unauthorized (Missing API Key or Token)",
+                content = [Content(schema = Schema(implementation = ApiResponse::class))]
+            ),
+            SwaggerApiResponse(
+                responseCode = "403",
+                description = "Forbidden (Requires Admin Role)",
+                content = [Content(schema = Schema(implementation = ApiResponse::class))]
+            ),
+            SwaggerApiResponse(
+                responseCode = "500",
+                description = "Internal Server Error",
+                content = [Content(schema = Schema(implementation = ApiResponse::class))]
+            )
         ]
     )
     @PostMapping("/locations")
     fun startLocationSync(
-        @Parameter(description = "Merkez noktanın enlem değeri (Latitude)", example = "40.7128")
+        @Parameter(description = "Latitude of the center point", example = "40.7128", required = true)
         @RequestParam lat: Double,
 
-        @Parameter(description = "Merkez noktanın boylam değeri (Longitude)", example = "-74.0060")
+        @Parameter(description = "Longitude of the center point", example = "-74.0060", required = true)
         @RequestParam lng: Double,
 
-        @Parameter(description = "Tarama yapılacak yarıçap (metre cinsinden)", example = "5000.0")
+        @Parameter(description = "Radius to scan in meters (must be > 0)", example = "5000.0", required = false)
         @RequestParam(required = false, defaultValue = "5000.0") radius: Double,
 
-        @Parameter(description = "Aranacak mekan tipi (örn: restaurant, cafe)", example = "restaurant")
+        @Parameter(description = "POI type to filter (e.g., restaurant, gym)", example = "restaurant", required = false)
         @RequestParam(required = false, defaultValue = "restaurant") type: String
     ): ResponseEntity<ApiResponse<String>> {
         logger.info("Received sync request: lat={}, lng={}, radius={}, type={}", lat, lng, radius, type)
+
+        // Synchronous validation before async execution
         syncService.validateRequest(lat, lng, radius)
+
         controllerScope.launch {
             try {
                 syncService.syncPois(lat, lng, radius, type)

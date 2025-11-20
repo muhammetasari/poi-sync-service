@@ -22,17 +22,30 @@ import org.springframework.web.bind.annotation.*
 
 @RestController
 @RequestMapping("/api/auth")
-@Tag(name = "Authentication", description = "Kullanıcı Kayıt, Giriş ve Çıkış İşlemleri")
+@Tag(name = "Authentication API", description = "Endpoints for User Registration, Login, Social Auth, and Token Management.")
 class AuthController(
     private val authService: AuthService
 ) {
     private val logger = LoggerFactory.getLogger(AuthController::class.java)
 
-    @Operation(summary = "Sosyal Medya ile Giriş", description = "Google, Facebook veya Apple gibi sağlayıcılardan alınan Firebase token ile giriş yapar.")
+    @Operation(summary = "Social Login", description = "Authenticates user using a Firebase ID token. Supports Google, Facebook, and Apple providers.")
     @ApiResponses(
         value = [
-            SwaggerApiResponse(responseCode = "200", description = "Giriş başarılı, token döndü"),
-            SwaggerApiResponse(responseCode = "400", description = "Geçersiz provider veya eksik bilgi")
+            SwaggerApiResponse(
+                responseCode = "200",
+                description = "Login successful, returns JWT access/refresh tokens",
+                content = [Content(schema = Schema(implementation = AuthResponse::class))]
+            ),
+            SwaggerApiResponse(
+                responseCode = "400",
+                description = "Invalid provider or validation error",
+                content = [Content(schema = Schema(implementation = ApiResponse::class))]
+            ),
+            SwaggerApiResponse(
+                responseCode = "401",
+                description = "Invalid Firebase Token",
+                content = [Content(schema = Schema(implementation = ApiResponse::class))]
+            )
         ]
     )
     @PostMapping("/social-login")
@@ -45,12 +58,24 @@ class AuthController(
         return ResponseHelper.ok(authResponse)
     }
 
-    @Operation(summary = "Kullanıcı Kaydı", description = "Email ve şifre ile yeni kullanıcı oluşturur.")
+    @Operation(summary = "Register User", description = "Creates a new user account with email and password.")
     @ApiResponses(
         value = [
-            SwaggerApiResponse(responseCode = "200", description = "Kayıt başarılı"),
-            SwaggerApiResponse(responseCode = "400", description = "Validasyon hatası (örn: geçersiz email, zayıf şifre)"),
-            SwaggerApiResponse(responseCode = "409", description = "Kullanıcı zaten mevcut")
+            SwaggerApiResponse(
+                responseCode = "200",
+                description = "Registration successful",
+                content = [Content(schema = Schema(implementation = AuthResponse::class))]
+            ),
+            SwaggerApiResponse(
+                responseCode = "400",
+                description = "Validation error (e.g., weak password, invalid email)",
+                content = [Content(schema = Schema(implementation = ApiResponse::class))]
+            ),
+            SwaggerApiResponse(
+                responseCode = "409",
+                description = "User with this email already exists",
+                content = [Content(schema = Schema(implementation = ApiResponse::class))]
+            )
         ]
     )
     @PostMapping("/register")
@@ -63,11 +88,24 @@ class AuthController(
         return ResponseHelper.ok(authResponse)
     }
 
-    @Operation(summary = "Kullanıcı Girişi", description = "Email ve şifre ile sisteme giriş yapar.")
+    @Operation(summary = "Login User", description = "Authenticates a user with email and password.")
     @ApiResponses(
         value = [
-            SwaggerApiResponse(responseCode = "200", description = "Giriş başarılı"),
-            SwaggerApiResponse(responseCode = "401", description = "Hatalı email veya şifre")
+            SwaggerApiResponse(
+                responseCode = "200",
+                description = "Login successful",
+                content = [Content(schema = Schema(implementation = AuthResponse::class))]
+            ),
+            SwaggerApiResponse(
+                responseCode = "400",
+                description = "Validation error",
+                content = [Content(schema = Schema(implementation = ApiResponse::class))]
+            ),
+            SwaggerApiResponse(
+                responseCode = "401",
+                description = "Invalid credentials",
+                content = [Content(schema = Schema(implementation = ApiResponse::class))]
+            )
         ]
     )
     @PostMapping("/login")
@@ -80,19 +118,30 @@ class AuthController(
         return ResponseHelper.ok(authResponse)
     }
 
-    @Operation(summary = "Çıkış Yap (Logout)", description = "Kullanıcının Access ve Refresh tokenlarını geçersiz kılar (Blacklist).")
+    @Operation(
+        summary = "Logout",
+        description = "Invalidates the current Access Token (and optionally Refresh Token) by adding them to a blacklist."
+    )
     @ApiResponses(
         value = [
-            SwaggerApiResponse(responseCode = "200", description = "Çıkış başarılı"),
-            SwaggerApiResponse(responseCode = "401", description = "Token geçersiz veya eksik")
+            SwaggerApiResponse(
+                responseCode = "200",
+                description = "Logout successful",
+                content = [Content(schema = Schema(implementation = ApiResponse::class))]
+            ),
+            SwaggerApiResponse(
+                responseCode = "401",
+                description = "Token invalid or missing",
+                content = [Content(schema = Schema(implementation = ApiResponse::class))]
+            )
         ]
     )
     @PostMapping("/logout")
     fun logout(
-        @Parameter(description = "Bearer Access Token", required = true)
+        @Parameter(description = "Bearer Access Token", required = true, example = "Bearer eyJhbGci...")
         @RequestHeader("Authorization") authHeader: String,
 
-        @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "Refresh token (opsiyonel)", required = false)
+        @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "Optional refresh token to invalidate")
         @RequestBody(required = false) request: LogoutRequest?
     ): ResponseEntity<ApiResponse<Unit>> {
         val accessToken = if (authHeader.startsWith("Bearer ")) {
