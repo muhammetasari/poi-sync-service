@@ -9,7 +9,8 @@ data class SearchNearbyResponse(
 
 data class NearbyPlace(
     val id: String,
-    val displayName: DisplayName?
+    val displayName: DisplayName?,
+    val location: Location? // YENİ
 )
 
 // ===== TEXT SEARCH =====
@@ -20,7 +21,8 @@ data class SearchTextResponse(
 data class TextSearchPlace(
     val id: String,
     val displayName: DisplayName?,
-    val formattedAddress: String?
+    val formattedAddress: String?,
+    val location: Location? // YENİ
 )
 
 // ===== PLACE DETAILS =====
@@ -28,6 +30,7 @@ data class PlaceDetails(
     val id: String,
     val displayName: DisplayName?,
     val formattedAddress: String?,
+    val location: Location?, // YENİ
     @JsonProperty("regularOpeningHours")
     val openingHours: OpeningHours?
 )
@@ -41,4 +44,9 @@ data class DisplayName(
 data class OpeningHours(
     val openNow: Boolean?,
     val weekdayDescriptions: List<String>?
+)
+
+data class Location(
+    val latitude: Double,
+    val longitude: Double
 )

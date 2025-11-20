@@ -12,6 +12,7 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.withContext
 import org.slf4j.LoggerFactory
+import org.springframework.data.mongodb.core.geo.GeoJsonPoint
 import org.springframework.stereotype.Service
 
 @Service
@@ -68,6 +69,7 @@ class LocationSyncService(
                         placeId = details.id,
                         name = details.displayName?.text ?: "Unnamed Place",
                         address = details.formattedAddress ?: "No Address",
+                        location = details.location?.let { GeoJsonPoint(it.longitude, it.latitude) },
                         openingHours = details.openingHours?.let {
                             PoiOpeningHours(
                                 openNow = it.openNow,
@@ -141,6 +143,8 @@ class LocationSyncService(
     private fun hasChanged(existing: PoiDocument, new: PoiDocument): Boolean {
         return existing.name != new.name ||
                 existing.address != new.address ||
-                existing.openingHours != new.openingHours
+                existing.openingHours != new.openingHours ||
+                existing.location != new.location ||
+                existing.placeId != new.placeId
     }
 }
