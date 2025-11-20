@@ -3,6 +3,7 @@ package com.rovits.poisyncservice.service
 import com.google.firebase.auth.FirebaseAuth
 import com.rovits.poisyncservice.domain.document.UserDocument
 import com.rovits.poisyncservice.domain.dto.*
+import com.rovits.poisyncservice.domain.enums.UserRole
 import com.rovits.poisyncservice.exception.*
 import com.rovits.poisyncservice.repository.UserRepository
 import org.slf4j.LoggerFactory
@@ -15,23 +16,17 @@ class AuthService(
     private val userRepository: UserRepository,
     private val jwtService: JwtService,
     private val passwordEncoder: PasswordEncoder,
-    private val tokenBlacklistService: TokenBlacklistService // YENİ: Inject edildi
+    private val tokenBlacklistService: TokenBlacklistService
 ) {
     private val logger = LoggerFactory.getLogger(AuthService::class.java)
 
-    /**
-     * Kullanıcı çıkış işlemi.
-     * Access Token ve (opsiyonel) Refresh Token'ı kara listeye alır.
-     */
+    // ... logout methodu aynı kalacak ...
     fun logout(accessToken: String, refreshToken: String?) {
-        // 1. Access Token'ı blacklist'e al
         val accessExpiry = jwtService.getExpirationDateFromToken(accessToken)
         if (accessExpiry != null) {
             tokenBlacklistService.blacklistToken(accessToken, accessExpiry.time)
             logger.info("Access token blacklisted")
         }
-
-        // 2. Refresh Token varsa onu da blacklist'e al
         if (!refreshToken.isNullOrBlank()) {
             val refreshExpiry = jwtService.getExpirationDateFromToken(refreshToken)
             if (refreshExpiry != null) {
@@ -72,7 +67,8 @@ class AuthService(
                 email = email,
                 name = name,
                 password = null,
-                provider = request.provider
+                provider = request.provider,
+                roles = setOf(UserRole.ROLE_USER)
             )
             userRepository.save(newUser)
         }
@@ -100,7 +96,8 @@ class AuthService(
             email = request.email,
             name = request.name,
             password = hashedPassword,
-            provider = "email"
+            provider = "email",
+            roles = setOf(UserRole.ROLE_USER)
         )
 
         val savedUser = userRepository.save(newUser)

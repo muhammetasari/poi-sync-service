@@ -1,5 +1,6 @@
 package com.rovits.poisyncservice.domain.document
 
+import com.rovits.poisyncservice.domain.enums.UserRole
 import org.springframework.data.annotation.Id
 import org.springframework.data.mongodb.core.index.Indexed
 import org.springframework.data.mongodb.core.mapping.Document
@@ -15,5 +16,7 @@ data class UserDocument(
 
     val name: String?,
     val password: String?,
-    val provider: String
+    val provider: String,
+
+    val roles: Set<UserRole> = setOf(UserRole.ROLE_USER)
 )

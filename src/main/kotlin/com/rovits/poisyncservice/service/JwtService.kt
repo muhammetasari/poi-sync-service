@@ -22,10 +22,13 @@ class JwtService(
         val now = Date()
         val expiryDate = Date(now.time + expirationMs)
 
+        val roles = user.roles.map { it.name }
+
         return Jwts.builder()
             .setSubject(user.email)
             .claim("userId", user.id)
             .claim("name", user.name)
+            .claim("roles", roles) // YENİ: Rolleri ekledik
             .setIssuedAt(now)
             .setExpiration(expiryDate)
             .signWith(key)
@@ -68,6 +71,7 @@ class JwtService(
             .parseClaimsJws(token)
             .body
     }
+
     fun getExpirationDateFromToken(token: String): Date? {
         return try {
             val claims = getClaims(token)

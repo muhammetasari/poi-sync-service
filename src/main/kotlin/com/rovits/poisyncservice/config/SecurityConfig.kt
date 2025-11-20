@@ -1,7 +1,7 @@
 package com.rovits.poisyncservice.config
 
+import com.rovits.poisyncservice.domain.enums.UserRole
 import com.rovits.poisyncservice.exception.SecurityExceptionHandler
-import com.rovits.poisyncservice.config.RateLimitFilter
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.security.authentication.AuthenticationManager
@@ -13,7 +13,6 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.security.web.SecurityFilterChain
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter
-
 
 @Configuration
 @EnableWebSecurity
@@ -43,6 +42,7 @@ class SecurityConfig(
                 it.accessDeniedHandler(securityExceptionHandler)
             }
             .authorizeHttpRequests {
+                // 1. Herkese Açık (Public)
                 it.requestMatchers(
                     "/api/auth/**",
                     "/actuator/health",
@@ -50,6 +50,7 @@ class SecurityConfig(
                     "/swagger-ui.html",
                     "/swagger-ui/**"
                 ).permitAll()
+                it.requestMatchers("/api/sync/**").hasAuthority(UserRole.ROLE_ADMIN.name)
                 it.anyRequest().authenticated()
             }
             .sessionManagement { it.sessionCreationPolicy(SessionCreationPolicy.STATELESS) }
