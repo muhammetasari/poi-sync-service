@@ -54,7 +54,7 @@ class LocationSyncController(
         @RequestParam(required = false, defaultValue = "restaurant") type: String
     ): ResponseEntity<ApiResponse<String>> {
         logger.info("Received sync request: lat={}, lng={}, radius={}, type={}", lat, lng, radius, type)
-
+        syncService.validateRequest(lat, lng, radius)
         controllerScope.launch {
             try {
                 syncService.syncPois(lat, lng, radius, type)

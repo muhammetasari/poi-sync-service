@@ -48,7 +48,8 @@ class SecurityConfig(
                     "/actuator/health",
                     "/v3/api-docs/**",
                     "/swagger-ui.html",
-                    "/swagger-ui/**"
+                    "/swagger-ui/**",
+                    "/api/test/**"
                 ).permitAll()
                 it.requestMatchers("/api/sync/**").hasAuthority(UserRole.ROLE_ADMIN.name)
                 it.anyRequest().authenticated()

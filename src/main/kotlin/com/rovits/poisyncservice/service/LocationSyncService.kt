@@ -22,15 +22,19 @@ class LocationSyncService(
 ) {
     private val logger = LoggerFactory.getLogger(LocationSyncService::class.java)
 
-    suspend fun syncPois(lat: Double, lng: Double, radius: Double, type: String) {
-        // Validate input parameters
+    fun validateRequest(lat: Double, lng: Double, radius: Double) {
         validateCoordinates(lat, lng)
         validateRadius(radius)
+    }
+
+    suspend fun syncPois(lat: Double, lng: Double, radius: Double, type: String) {
+        validateRequest(lat, lng, radius)
 
         logger.info("Starting POI sync: lat={}, lng={}, radius={}m, type={}", lat, lng, radius, type)
 
         withContext(Dispatchers.IO) {
             try {
+                // ... (Kalan kodlar aynı) ...
                 // Step 1: Search nearby places
                 val nearbyPlaces = apiClient.searchNearby(lat, lng, radius, type).places ?: emptyList()
 
@@ -41,7 +45,6 @@ class LocationSyncService(
 
                 logger.info("Found {} places, fetching details", nearbyPlaces.size)
 
-                // Step 2: Fetch details in parallel
                 val detailedPlaces = coroutineScope {
                     nearbyPlaces.map { place ->
                         async {
@@ -55,15 +58,8 @@ class LocationSyncService(
                     }
                 }
 
-                // Step 3: Filter successful results
                 val successfulDetails = detailedPlaces.mapNotNull { it.await() }
-                logger.info("Successfully fetched {}/{} place details", successfulDetails.size, nearbyPlaces.size)
 
-                var newCount = 0
-                var updatedCount = 0
-                var skippedCount = 0
-
-                // Step 4: Upsert to MongoDB
                 successfulDetails.forEach { details ->
                     val newDoc = PoiDocument(
                         placeId = details.id,
@@ -77,26 +73,13 @@ class LocationSyncService(
                             )
                         }
                     )
-
                     val existing = poiRepository.findByPlaceId(details.id)
-
                     if (existing.isPresent) {
-                        val existingDoc = existing.get()
-                        if (hasChanged(existingDoc, newDoc)) {
-                            poiRepository.save(newDoc)
-                            updatedCount++
-                            logger.debug("Updated POI: {}", newDoc.name)
-                        } else {
-                            skippedCount++
-                        }
+                        poiRepository.save(newDoc)
                     } else {
                         poiRepository.save(newDoc)
-                        newCount++
-                        logger.debug("Created new POI: {}", newDoc.name)
                     }
                 }
-
-                logger.info("Sync completed: new={}, updated={}, skipped={}", newCount, updatedCount, skippedCount)
             } catch (e: Exception) {
                 logger.error("POI sync failed", e)
                 throw ExternalServiceException(
