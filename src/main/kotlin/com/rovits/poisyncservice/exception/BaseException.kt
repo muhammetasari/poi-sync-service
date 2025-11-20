@@ -1,7 +1,5 @@
 package com.rovits.poisyncservice.exception
 
-import org.springframework.http.HttpStatus
-
 /**
  * Base exception class for all custom exceptions in the application.
  * Provides i18n support through message keys and arguments.
@@ -9,18 +7,16 @@ import org.springframework.http.HttpStatus
  * @property errorCode Unique error code for identifying the error type (e.g., "USER_001")
  * @property messageKey i18n message key for localized error messages
  * @property messageArgs Arguments to be used in the localized message placeholders
- * @property httpStatus HTTP status code to be returned in the response
  */
 abstract class BaseException(
     val errorCode: String,
     val messageKey: String,
     val messageArgs: Array<Any>? = null,
-    val httpStatus: HttpStatus = HttpStatus.INTERNAL_SERVER_ERROR,
     cause: Throwable? = null
 ) : RuntimeException(messageKey, cause) {
 
     override fun toString(): String {
-        return "errorCode='$errorCode', messageKey='$messageKey', httpStatus=$httpStatus"
+        return "errorCode='$errorCode', messageKey='$messageKey'"
     }
 
     override fun equals(other: Any?): Boolean {
@@ -33,7 +29,6 @@ abstract class BaseException(
             if (other.messageArgs == null) return false
             if (!messageArgs.contentEquals(other.messageArgs)) return false
         } else if (other.messageArgs != null) return false
-        if (httpStatus != other.httpStatus) return false
 
         return true
     }
@@ -42,7 +37,6 @@ abstract class BaseException(
         var result = errorCode.hashCode()
         result = 31 * result + messageKey.hashCode()
         result = 31 * result + (messageArgs?.contentHashCode() ?: 0)
-        result = 31 * result + httpStatus.hashCode()
         return result
     }
 }

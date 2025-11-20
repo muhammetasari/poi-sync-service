@@ -27,13 +27,7 @@ import org.springframework.web.reactive.function.client.WebClientResponseExcepti
 /**
  * Global exception handler for the entire application.
  * Catches all exceptions and converts them to standardized API responses with i18n support.
- *
- * Features:
- * - i18n message resolution based on Accept-Language header
- * - Standardized error response format
- * - Proper HTTP status codes
- * - Detailed logging with correlation ID
- * - Environment-aware responses (dev vs prod)
+ * * Now manages HTTP status codes centrally, decoupling services from HTTP logic.
  */
 @RestControllerAdvice
 class GlobalExceptionHandler(
@@ -51,7 +45,7 @@ class GlobalExceptionHandler(
 
     /**
      * Handles all custom exceptions (BaseException and its subclasses)
-     * Resolves i18n messages based on messageKey and messageArgs
+     * Resolves i18n messages and determines HTTP status based on exception type.
      */
     @ExceptionHandler(BaseException::class)
     fun handleBaseException(ex: BaseException): ResponseEntity<ApiResponse<Nothing>> {
@@ -75,7 +69,19 @@ class GlobalExceptionHandler(
             )
         }
 
-        return ResponseHelper.error(errorDetail, ex.httpStatus)
+        // Determine HTTP status based on exception type
+        val httpStatus = when (ex) {
+            is ResourceNotFoundException -> HttpStatus.NOT_FOUND
+            is AuthenticationException -> HttpStatus.UNAUTHORIZED
+            is AuthorizationException -> HttpStatus.FORBIDDEN
+            is ValidationException -> HttpStatus.BAD_REQUEST
+            is BusinessException -> HttpStatus.CONFLICT
+            is ExternalServiceException -> HttpStatus.SERVICE_UNAVAILABLE
+            is CacheException -> HttpStatus.INTERNAL_SERVER_ERROR
+            else -> HttpStatus.INTERNAL_SERVER_ERROR
+        }
+
+        return ResponseHelper.error(errorDetail, httpStatus)
     }
 
     // ========================================
@@ -84,7 +90,6 @@ class GlobalExceptionHandler(
 
     /**
      * Handles Bean Validation errors (@Valid annotation)
-     * Returns multiple field errors with localized messages
      */
     @ExceptionHandler(MethodArgumentNotValidException::class)
     fun handleValidationException(
@@ -115,9 +120,6 @@ class GlobalExceptionHandler(
         )
     }
 
-    /**
-     * Handles BindException (form data binding errors)
-     */
     @ExceptionHandler(BindException::class)
     fun handleBindException(ex: BindException): ResponseEntity<ValidationErrorResponse> {
         logger.warn("Bind exception occurred: {} field errors", ex.bindingResult.errorCount)
@@ -141,9 +143,6 @@ class GlobalExceptionHandler(
     // REQUEST PARAMETER ERRORS
     // ========================================
 
-    /**
-     * Handles missing required request parameters
-     */
     @ExceptionHandler(MissingServletRequestParameterException::class)
     fun handleMissingParameter(
         ex: MissingServletRequestParameterException
@@ -164,9 +163,6 @@ class GlobalExceptionHandler(
         return ResponseHelper.badRequest(errorDetail)
     }
 
-    /**
-     * Handles type mismatch in request parameters
-     */
     @ExceptionHandler(MethodArgumentTypeMismatchException::class)
     fun handleTypeMismatch(
         ex: MethodArgumentTypeMismatchException
@@ -184,9 +180,6 @@ class GlobalExceptionHandler(
         return ResponseHelper.badRequest(errorDetail)
     }
 
-    /**
-     * Handles malformed JSON in request body
-     */
     @ExceptionHandler(HttpMessageNotReadableException::class)
     fun handleHttpMessageNotReadable(
         ex: HttpMessageNotReadableException
@@ -207,9 +200,6 @@ class GlobalExceptionHandler(
     // SECURITY EXCEPTIONS
     // ========================================
 
-    /**
-     * Handles Spring Security access denied errors
-     */
     @ExceptionHandler(AccessDeniedException::class)
     fun handleAccessDenied(ex: AccessDeniedException): ResponseEntity<ApiResponse<Nothing>> {
         logger.warn("Access denied: {}", ex.message)
@@ -224,9 +214,6 @@ class GlobalExceptionHandler(
         return ResponseHelper.forbidden(errorDetail)
     }
 
-    /**
-     * Handles Spring Security authentication errors
-     */
     @ExceptionHandler(org.springframework.security.core.AuthenticationException::class)
     fun handleAuthenticationException(
         ex: org.springframework.security.core.AuthenticationException
@@ -247,9 +234,6 @@ class GlobalExceptionHandler(
     // DATABASE EXCEPTIONS
     // ========================================
 
-    /**
-     * Handles duplicate key errors from MongoDB
-     */
     @ExceptionHandler(DuplicateKeyException::class)
     fun handleDuplicateKey(ex: DuplicateKeyException): ResponseEntity<ApiResponse<Nothing>> {
         logger.warn("Duplicate key error: {}", ex.message)
@@ -264,9 +248,6 @@ class GlobalExceptionHandler(
         return ResponseHelper.conflict(errorDetail)
     }
 
-    /**
-     * Handles general database access errors
-     */
     @ExceptionHandler(DataAccessException::class)
     fun handleDataAccessException(ex: DataAccessException): ResponseEntity<ApiResponse<Nothing>> {
         logger.error("Database error occurred", ex)
@@ -296,9 +277,6 @@ class GlobalExceptionHandler(
     // EXTERNAL API EXCEPTIONS
     // ========================================
 
-    /**
-     * Handles WebClient response exceptions (4xx, 5xx from external APIs)
-     */
     @ExceptionHandler(WebClientResponseException::class)
     fun handleWebClientResponseException(
         ex: WebClientResponseException
@@ -326,9 +304,6 @@ class GlobalExceptionHandler(
         return ResponseHelper.serviceUnavailable(errorDetail)
     }
 
-    /**
-     * Handles generic WebClient errors (connection timeout, etc.)
-     */
     @ExceptionHandler(WebClientException::class)
     fun handleWebClientException(ex: WebClientException): ResponseEntity<ApiResponse<Nothing>> {
         logger.error("External service connection error", ex)
@@ -347,10 +322,6 @@ class GlobalExceptionHandler(
     // GENERIC EXCEPTION (CATCH-ALL)
     // ========================================
 
-    /**
-     * Handles all uncaught exceptions
-     * This is the last line of defense
-     */
     @ExceptionHandler(Exception::class)
     fun handleGenericException(ex: Exception): ResponseEntity<ApiResponse<Nothing>> {
         logger.error("Unexpected error occurred", ex)
