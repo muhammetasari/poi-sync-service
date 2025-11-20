@@ -43,7 +43,8 @@ class PoiService(
 
         return withContext(Dispatchers.IO) {
             val distance = Distance(radius / 1000.0, Metrics.KILOMETERS)
-            val localPois = poiRepository.findByLocationNear(Point(lng, lat), distance)
+
+            val localPois = poiRepository.findByLocationNearAndType(Point(lng, lat), distance, type)
 
             if (localPois.isNotEmpty()) {
                 logger.info("Source: MongoDB (Count: ${localPois.size})")
@@ -55,7 +56,7 @@ class PoiService(
             logger.info("Source: Google API")
             val googleResponse = googleClient.searchNearby(lat, lng, radius, type)
 
-            googleResponse.places?.let { savePlacesAsync(it) }
+            googleResponse.places?.let { savePlacesAsync(it, type) }
             cacheToRedis(cacheKey, googleResponse)
             return@withContext googleResponse
         }
@@ -70,7 +71,7 @@ class PoiService(
         val response = googleClient.searchText(query, lang, max, bias)
 
         response.places?.let { places ->
-            val docs = places.map { it.toDocument() }
+            val docs = places.map { it.toDocument() } // Text search sonucunda tip garantisi olmadığı için type=null olabilir
             try {
                 poiRepository.saveAll(docs)
             } catch (e: Exception) {
@@ -139,8 +140,8 @@ class PoiService(
         }
     }
 
-    private fun savePlacesAsync(places: List<NearbyPlace>) {
-        val docs = places.map { it.toDocument() }
+    private fun savePlacesAsync(places: List<NearbyPlace>, type: String) {
+        val docs = places.map { it.toDocument(type) }
         try {
             poiRepository.saveAll(docs)
         } catch (e: Exception) {
@@ -157,10 +158,11 @@ class PoiService(
     private fun getUnknownName() = messageResolver.resolve(MessageKeys.POI_UNKNOWN_NAME)
     private fun getUnknownAddress() = messageResolver.resolve(MessageKeys.POI_UNKNOWN_ADDRESS)
 
-    private fun NearbyPlace.toDocument() = PoiDocument(
+    private fun NearbyPlace.toDocument(type: String? = null) = PoiDocument(
         placeId = this.id,
         name = this.displayName?.text ?: getUnknownName(),
         address = getUnknownAddress(),
+        type = type,
         location = this.location?.let { GeoJsonPoint(it.longitude, it.latitude) },
         openingHours = null
     )
@@ -169,6 +171,7 @@ class PoiService(
         placeId = this.id,
         name = this.displayName?.text ?: getUnknownName(),
         address = this.formattedAddress ?: getUnknownAddress(),
+        type = null,
         location = this.location?.let { GeoJsonPoint(it.longitude, it.latitude) },
         openingHours = null
     )
@@ -177,6 +180,7 @@ class PoiService(
         placeId = this.id,
         name = this.displayName?.text ?: getUnknownName(),
         address = this.formattedAddress ?: getUnknownAddress(),
+        type = null,
         location = this.location?.let { GeoJsonPoint(it.longitude, it.latitude) },
         openingHours = this.openingHours?.let {
             PoiOpeningHours(it.openNow, it.weekdayDescriptions)
