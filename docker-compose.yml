@@ -28,9 +28,6 @@ services:
       JWT_SECRET: ${JWT_SECRET}
       SPRING_PROFILES_ACTIVE: docker
 
-      GRAFANA_OTLP_ENDPOINT: ${GRAFANA_OTLP_ENDPOINT}
-      GRAFANA_API_TOKEN_BASE64: ${GRAFANA_API_TOKEN_BASE64}
-
       # Actuator Ayarı
       MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE: "health,info,metrics,prometheus"
 
