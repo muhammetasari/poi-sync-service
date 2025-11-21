@@ -55,5 +55,4 @@ out/
 *.war
 *.log
 
-
-
+local.properties
