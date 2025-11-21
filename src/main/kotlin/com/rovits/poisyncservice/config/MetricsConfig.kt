@@ -1,8 +1,11 @@
 package com.rovits.poisyncservice.config
 
+import io.opentelemetry.api.common.AttributeKey
+import io.opentelemetry.api.common.Attributes
+import io.opentelemetry.sdk.resources.Resource
 import org.slf4j.LoggerFactory
-import org.springframework.boot.actuate.autoconfigure.metrics.export.otlp.OtlpMetricsExportAutoConfiguration
 import org.springframework.boot.context.event.ApplicationReadyEvent
+import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.context.event.EventListener
 import org.springframework.core.env.Environment
@@ -12,6 +15,32 @@ class MetricsConfig(
     private val environment: Environment
 ) {
     private val logger = LoggerFactory.getLogger(MetricsConfig::class.java)
+
+    @Bean
+    fun otelResource(): Resource {
+        val serviceName = environment.getProperty(
+            "management.otlp.metrics.export.resource-attributes[service.name]",
+            "poi-sync-service"
+        )
+        val serviceVersion = environment.getProperty(
+            "management.otlp.metrics.export.resource-attributes[service.version]",
+            "0.0.1-SNAPSHOT"
+        )
+        val deploymentEnvironment = environment.getProperty(
+            "management.otlp.metrics.export.resource-attributes[deployment.environment]",
+            environment.activeProfiles.firstOrNull() ?: "unknown"
+        )
+
+        logger.info("🔧 Creating OpenTelemetry Resource with service.name=$serviceName")
+
+        return Resource.create(
+            Attributes.builder()
+                .put(AttributeKey.stringKey("service.name"), serviceName)
+                .put(AttributeKey.stringKey("service.version"), serviceVersion)
+                .put(AttributeKey.stringKey("deployment.environment"), deploymentEnvironment)
+                .build()
+        )
+    }
 
     @EventListener(ApplicationReadyEvent::class)
     fun logMetricsConfiguration() {
@@ -23,7 +52,7 @@ class MetricsConfig(
         val otlpUrl = environment.getProperty("management.otlp.metrics.export.url", "NOT_SET")
         val otlpStep = environment.getProperty("management.otlp.metrics.export.step", "60s")
         val serviceName = environment.getProperty("management.otlp.metrics.export.resource-attributes[service.name]", "NOT_SET")
-        val hasAuthHeader = !environment.getProperty("management.otlp.metrics.export.headers.Authorization", "").isNullOrEmpty()
+        val hasAuthHeader = environment.getProperty("management.otlp.metrics.export.headers.Authorization", "").isNotEmpty()
 
         logger.info("OTLP Metrics Export Enabled: $otlpEnabled")
         logger.info("OTLP Endpoint: ${maskUrl(otlpUrl)}")
@@ -51,7 +80,7 @@ class MetricsConfig(
             } else {
                 url.take(30) + "..."
             }
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             "***MASKED***"
         }
     }
