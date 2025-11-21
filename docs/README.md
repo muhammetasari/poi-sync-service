@@ -159,7 +159,7 @@ Test coverage ve örnekler için:
 
 ## 👥 Katkı & İletişim
 
-Pull request gönderebilir, hata veya öneri iletebilirsin.  
+Pull request gönderebilir, hata veya öneri iletebilirsin.
 Katkı rehberi yakında eklenecek.
 
 ---
