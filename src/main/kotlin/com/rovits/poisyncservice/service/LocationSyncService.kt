@@ -123,6 +123,33 @@ class LocationSyncService(
         }
     }
 
-    private fun validateCoordinates(lat: Double, lng: Double) { /* ... */ }
-    private fun validateRadius(radius: Double) { /* ... */ }
+    private fun validateCoordinates(lat: Double, lng: Double) {
+        if (lat < -90.0 || lat > 90.0) {
+            throw ValidationException(
+                errorCode = ErrorCodes.INVALID_LATITUDE,
+                messageKey = MessageKeys.VALIDATION_LATITUDE,
+                messageArgs = arrayOf(lat),
+                fieldName = "latitude"
+            )
+        }
+        if (lng < -180.0 || lng > 180.0) {
+            throw ValidationException(
+                errorCode = ErrorCodes.INVALID_LONGITUDE,
+                messageKey = MessageKeys.VALIDATION_LONGITUDE,
+                messageArgs = arrayOf(lng),
+                fieldName = "longitude"
+            )
+        }
+    }
+
+    private fun validateRadius(radius: Double) {
+        if (radius <= 0 || radius > 50000) {
+            throw ValidationException(
+                errorCode = ErrorCodes.INVALID_RADIUS,
+                messageKey = MessageKeys.VALIDATION_RADIUS,
+                messageArgs = arrayOf(radius),
+                fieldName = "radius"
+            )
+        }
+    }
 }
