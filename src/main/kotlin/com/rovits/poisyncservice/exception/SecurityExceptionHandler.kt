@@ -1,6 +1,7 @@
 package com.rovits.poisyncservice.exception
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.rovits.poisyncservice.constants.HttpConstants
 import com.rovits.poisyncservice.dto.response.ApiResponse
 import com.rovits.poisyncservice.dto.response.ErrorDetail
 import com.rovits.poisyncservice.util.MessageKeys
@@ -45,7 +46,7 @@ class SecurityExceptionHandler(
     private fun writeResponse(response: HttpServletResponse, status: Int, errorDetail: ErrorDetail) {
         response.status = status
         response.contentType = MediaType.APPLICATION_JSON_VALUE
-        response.characterEncoding = "UTF-8"
+        response.characterEncoding = HttpConstants.ENCODING_UTF_8
 
         val apiResponse = ApiResponse.error(errorDetail)
         objectMapper.writeValue(response.writer, apiResponse)

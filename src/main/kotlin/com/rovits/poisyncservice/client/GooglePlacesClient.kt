@@ -1,5 +1,8 @@
 package com.rovits.poisyncservice.client
 
+import com.rovits.poisyncservice.constants.ApiEndpoints
+import com.rovits.poisyncservice.constants.CacheConstants
+import com.rovits.poisyncservice.constants.HttpConstants
 import com.rovits.poisyncservice.domain.dto.*
 import com.rovits.poisyncservice.exception.ErrorCodes
 import com.rovits.poisyncservice.exception.ExternalServiceException
@@ -17,9 +20,9 @@ class GooglePlacesClient(
 ) {
     private val logger = LoggerFactory.getLogger(GooglePlacesClient::class.java)
 
-    private val searchFieldMask = "places.id,places.displayName,places.location"
-    private val textSearchFieldMask = "places.id,places.displayName,places.formattedAddress,places.location"
-    private val detailFieldMask = "id,displayName.text,formattedAddress,regularOpeningHours,location"
+    private val searchFieldMask = CacheConstants.FIELD_MASK_NEARBY_SEARCH
+    private val textSearchFieldMask = CacheConstants.FIELD_MASK_TEXT_SEARCH
+    private val detailFieldMask = CacheConstants.FIELD_MASK_DETAILS
 
     suspend fun searchNearby(lat: Double, lng: Double, radius: Double, type: String): SearchNearbyResponse {
         logger.info("Google API Nearby: lat={}, lng={}", lat, lng)
@@ -27,7 +30,7 @@ class GooglePlacesClient(
             includedTypes = listOf(type),
             locationRestriction = LocationRestriction(circle = Circle(center = Center(lat, lng), radius = radius))
         )
-        return executeRequest("/places:searchNearby", requestBody, searchFieldMask)
+        return executeRequest(ApiEndpoints.GOOGLE_PLACES_SEARCH_NEARBY, requestBody, searchFieldMask)
     }
 
     suspend fun searchText(query: String, lang: String, max: Int, bias: LocationBias?): SearchTextResponse {
@@ -35,14 +38,14 @@ class GooglePlacesClient(
         val requestBody = SearchTextRequest(
             textQuery = query, languageCode = lang, maxResultCount = max, locationBias = bias
         )
-        return executeRequest("/places:searchText", requestBody, textSearchFieldMask)
+        return executeRequest(ApiEndpoints.GOOGLE_PLACES_SEARCH_TEXT, requestBody, textSearchFieldMask)
     }
 
     suspend fun getPlaceDetails(placeId: String): PlaceDetails {
         logger.debug("Google API Details: id={}", placeId)
         return try {
-            webClient.get().uri("/places/{placeId}", placeId)
-                .header("X-Goog-FieldMask", detailFieldMask)
+            webClient.get().uri(ApiEndpoints.GOOGLE_PLACES_DETAILS, placeId)
+                .header(HttpConstants.HEADER_X_GOOG_FIELD_MASK, detailFieldMask)
                 .retrieve().awaitBody()
         } catch (e: Exception) {
             throw handleException(e)
@@ -52,7 +55,7 @@ class GooglePlacesClient(
     private suspend inline fun <reified T> executeRequest(uri: String, body: Any, mask: String): T {
         return try {
             webClient.post().uri(uri).bodyValue(body)
-                .header("X-Goog-FieldMask", mask)
+                .header(HttpConstants.HEADER_X_GOOG_FIELD_MASK, mask)
                 .retrieve().awaitBody()
         } catch (e: Exception) {
             throw handleException(e)

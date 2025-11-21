@@ -1,16 +1,17 @@
 package com.rovits.poisyncservice.service
 
+import com.rovits.poisyncservice.constants.DefaultValues
+import com.rovits.poisyncservice.constants.SecurityConstants
 import org.springframework.stereotype.Service
 import java.util.concurrent.ConcurrentHashMap
-import java.util.concurrent.TimeUnit
 
 @Service
 class RateLimitService {
     private val attempts = ConcurrentHashMap<String, Attempt>()
     private val ipAttempts = ConcurrentHashMap<String, Attempt>()
-    private val maxAttempts = 5
-    private val maxIpAttempts = 20
-    private val blockDurationMillis = TimeUnit.MINUTES.toMillis(10)
+    private val maxAttempts = DefaultValues.MAX_AUTH_ATTEMPTS
+    private val maxIpAttempts = DefaultValues.MAX_IP_ATTEMPTS
+    private val blockDurationMillis = DefaultValues.BLOCK_DURATION_MILLIS
 
     fun checkAndIncrease(key: String, ip: String? = null) {
         val now = System.currentTimeMillis()
@@ -31,7 +32,7 @@ class RateLimitService {
             }
         }!!
         if (attempt.blockedUntil > now) {
-            throw RateLimitException("Too many attempts for user. Try again later.")
+            throw RateLimitException(SecurityConstants.ERROR_TOO_MANY_USER_ATTEMPTS)
         }
         // IP bazlı kontrol
         if (ip != null) {
@@ -51,7 +52,7 @@ class RateLimitService {
                 }
             }!!
             if (ipAttempt.blockedUntil > now) {
-                throw RateLimitException("Too many attempts from IP. Try again later.")
+                throw RateLimitException(SecurityConstants.ERROR_TOO_MANY_IP_ATTEMPTS)
             }
         }
     }

@@ -1,5 +1,6 @@
 package com.rovits.poisyncservice.config
 
+import com.rovits.poisyncservice.constants.HttpConstants
 import jakarta.servlet.FilterChain
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
@@ -26,8 +27,8 @@ import java.util.*
 class CorrelationIdFilter : OncePerRequestFilter() {
 
     companion object {
-        const val CORRELATION_ID_HEADER = "X-Correlation-ID"
-        const val CORRELATION_ID_MDC_KEY = "correlationId"
+        const val CORRELATION_ID_HEADER = HttpConstants.HEADER_X_CORRELATION_ID
+        const val CORRELATION_ID_MDC_KEY = HttpConstants.MDC_KEY_CORRELATION_ID
     }
 
     override fun doFilterInternal(

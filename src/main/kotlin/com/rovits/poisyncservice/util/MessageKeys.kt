@@ -65,6 +65,9 @@ object MessageKeys {
     const val INTERNAL_SERVER_ERROR = "error.internal.server"
     const val RATE_LIMIT_EXCEEDED = "error.rate.limit.exceeded"
 
+    // API Key
+    const val API_KEY_MISSING_OR_INVALID = "error.api.key.missing.or.invalid"
+
     // ===================================
     // POI
     // ===================================

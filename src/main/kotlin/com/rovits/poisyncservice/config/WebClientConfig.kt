@@ -1,5 +1,7 @@
 package com.rovits.poisyncservice.config
 
+import com.rovits.poisyncservice.constants.ApiEndpoints
+import com.rovits.poisyncservice.constants.HttpConstants
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
@@ -13,8 +15,8 @@ class WebClientConfig(
     @Bean("googlePlacesWebClient")
     fun googlePlacesWebClient(): WebClient {
         return WebClient.builder()
-            .baseUrl("https://places.googleapis.com/v1")
-            .defaultHeader("X-Goog-Api-Key", apiKey)
+            .baseUrl(ApiEndpoints.GOOGLE_PLACES_BASE_URL)
+            .defaultHeader(HttpConstants.HEADER_X_GOOG_API_KEY, apiKey)
             .build()
     }
 }

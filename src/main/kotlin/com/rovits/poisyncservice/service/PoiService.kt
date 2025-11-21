@@ -2,6 +2,7 @@ package com.rovits.poisyncservice.service
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.rovits.poisyncservice.client.GooglePlacesClient
+import com.rovits.poisyncservice.constants.CacheConstants
 import com.rovits.poisyncservice.domain.document.PoiDocument
 import com.rovits.poisyncservice.domain.document.PoiOpeningHours
 import com.rovits.poisyncservice.domain.dto.*
@@ -31,12 +32,12 @@ class PoiService(
     private val logger = LoggerFactory.getLogger(PoiService::class.java)
 
     companion object {
-        private const val REDIS_TTL_MINUTES = 10L
-        private const val REDIS_DETAILS_TTL_HOURS = 24L
+        private const val REDIS_TTL_MINUTES = CacheConstants.TTL_SEARCH_MINUTES
+        private const val REDIS_DETAILS_TTL_HOURS = CacheConstants.TTL_DETAILS_HOURS
     }
 
     suspend fun searchNearby(lat: Double, lng: Double, radius: Double, type: String): SearchNearbyResponse {
-        val cacheKey = "search:nearby:${round(lat)}:${round(lng)}:$radius:$type"
+        val cacheKey = "${CacheConstants.PREFIX_SEARCH_NEARBY}${round(lat)}:${round(lng)}:$radius:$type"
         val currentLang = messageResolver.getCurrentLocale().language
 
         getCached<SearchNearbyResponse>(cacheKey)?.let { return it }
@@ -63,7 +64,7 @@ class PoiService(
     }
 
     suspend fun searchText(query: String, lang: String, max: Int, bias: LocationBias?): SearchTextResponse {
-        val cacheKey = "search:text:${query.lowercase().trim()}:$lang"
+        val cacheKey = "${CacheConstants.PREFIX_SEARCH_TEXT}${query.lowercase().trim()}:$lang"
 
         getCached<SearchTextResponse>(cacheKey)?.let { return it }
 
@@ -84,7 +85,7 @@ class PoiService(
     }
 
     suspend fun getPlaceDetails(placeId: String): PlaceDetails {
-        val cacheKey = "details:$placeId"
+        val cacheKey = "${CacheConstants.PREFIX_DETAILS}$placeId"
         val currentLang = messageResolver.getCurrentLocale().language
 
         getCached<PlaceDetails>(cacheKey)?.let { return it }
@@ -105,7 +106,7 @@ class PoiService(
                         OpeningHours(it.openNow, it.weekdayDescriptions)
                     }
                 )
-                cacheToRedis(cacheKey, details, REDIS_DETAILS_TTL_HOURS, TimeUnit.HOURS)
+                cacheToRedis(cacheKey, details, REDIS_DETAILS_TTL_HOURS, CacheConstants.TTL_DETAILS_UNIT)
                 return@withContext details
             }
 
@@ -113,7 +114,7 @@ class PoiService(
             val details = googleClient.getPlaceDetails(placeId)
 
             poiRepository.save(details.toDocument())
-            cacheToRedis(cacheKey, details, REDIS_DETAILS_TTL_HOURS, TimeUnit.HOURS)
+            cacheToRedis(cacheKey, details, REDIS_DETAILS_TTL_HOURS, CacheConstants.TTL_DETAILS_UNIT)
             return@withContext details
         }
     }
@@ -131,7 +132,7 @@ class PoiService(
         }
     }
 
-    private fun cacheToRedis(key: String, data: Any, ttl: Long = REDIS_TTL_MINUTES, unit: TimeUnit = TimeUnit.MINUTES) {
+    private fun cacheToRedis(key: String, data: Any, ttl: Long = REDIS_TTL_MINUTES, unit: TimeUnit = CacheConstants.TTL_SEARCH_UNIT) {
         try {
             val json = objectMapper.writeValueAsString(data)
             redisTemplate.opsForValue().set(key, json, ttl, unit)

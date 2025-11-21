@@ -1,6 +1,7 @@
 package com.rovits.poisyncservice.config
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.rovits.poisyncservice.constants.SecurityConstants
 import com.rovits.poisyncservice.dto.response.ApiResponse
 import com.rovits.poisyncservice.dto.response.ErrorDetail
 import com.rovits.poisyncservice.dto.response.FieldError
@@ -31,7 +32,7 @@ import java.net.URI
 class GlobalExceptionHandler(
     private val messageResolver: MessageResolver,
     private val objectMapper: ObjectMapper,
-    @Value("\${spring.profiles.active:dev}") private val activeProfile: String
+    @Value("\${spring.profiles.active:${SecurityConstants.DEFAULT_ACTIVE_PROFILE}}") private val activeProfile: String
 ) {
     private val logger = LoggerFactory.getLogger(GlobalExceptionHandler::class.java)
 
@@ -63,7 +64,7 @@ class GlobalExceptionHandler(
             is ValidationException -> ErrorDetail.withField(
                 code = ex.errorCode,
                 message = localizedMessage,
-                field = ex.fieldName ?: "unknown"
+                field = ex.fieldName ?: SecurityConstants.UNKNOWN_FIELD_NAME
             ).copy(instance = request.requestURI, type = URI.create("urn:problem-type:validation"))
             else -> ErrorDetail.of(
                 code = ex.errorCode,

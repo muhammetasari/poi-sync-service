@@ -1,5 +1,6 @@
 package com.rovits.poisyncservice.config
 
+import com.rovits.poisyncservice.constants.ApiEndpoints
 import com.rovits.poisyncservice.domain.enums.UserRole
 import com.rovits.poisyncservice.exception.SecurityExceptionHandler
 import org.springframework.context.annotation.Bean
@@ -44,14 +45,14 @@ class SecurityConfig(
             .authorizeHttpRequests {
                 // 1. Herkese Açık (Public)
                 it.requestMatchers(
-                    "/api/auth/**",
-                    "/actuator/health",
-                    "/v3/api-docs/**",
-                    "/swagger-ui.html",
-                    "/swagger-ui/**",
-                    "/api/test/**"
+                    ApiEndpoints.PATTERN_AUTH,
+                    ApiEndpoints.ACTUATOR_HEALTH,
+                    ApiEndpoints.PATTERN_OPENAPI_DOCS,
+                    ApiEndpoints.SWAGGER_UI_HTML,
+                    ApiEndpoints.PATTERN_SWAGGER_UI,
+                    ApiEndpoints.PATTERN_TEST
                 ).permitAll()
-                it.requestMatchers("/api/sync/**").hasAuthority(UserRole.ROLE_ADMIN.name)
+                it.requestMatchers(ApiEndpoints.PATTERN_SYNC).hasAuthority(UserRole.ROLE_ADMIN.name)
                 it.anyRequest().authenticated()
             }
             .sessionManagement { it.sessionCreationPolicy(SessionCreationPolicy.STATELESS) }

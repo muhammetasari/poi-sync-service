@@ -1,5 +1,6 @@
 package com.rovits.poisyncservice.config
 
+import com.rovits.poisyncservice.constants.HttpConstants
 import com.rovits.poisyncservice.exception.TokenInvalidException
 import com.rovits.poisyncservice.service.CustomUserDetailsService
 import com.rovits.poisyncservice.service.JwtService
@@ -24,14 +25,14 @@ class JwtAuthenticationFilter(
         response: HttpServletResponse,
         filterChain: FilterChain
     ) {
-        val authHeader = request.getHeader("Authorization")
+        val authHeader = request.getHeader(HttpConstants.HEADER_AUTHORIZATION)
 
-        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+        if (authHeader == null || !authHeader.startsWith(HttpConstants.BEARER_PREFIX)) {
             filterChain.doFilter(request, response)
             return
         }
 
-        val token = authHeader.substring(7)
+        val token = authHeader.substring(HttpConstants.BEARER_PREFIX_LENGTH)
 
         if (tokenBlacklistService.isTokenBlacklisted(token)) {
             filterChain.doFilter(request, response)

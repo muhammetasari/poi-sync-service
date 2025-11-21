@@ -1,5 +1,6 @@
 package com.rovits.poisyncservice.controller
 
+import com.rovits.poisyncservice.constants.HttpConstants
 import com.rovits.poisyncservice.domain.dto.AuthResponse
 import com.rovits.poisyncservice.domain.dto.LoginRequest
 import com.rovits.poisyncservice.domain.dto.LogoutRequest
@@ -139,13 +140,13 @@ class AuthController(
     @PostMapping("/logout")
     fun logout(
         @Parameter(description = "Bearer Access Token", required = true, example = "Bearer eyJhbGci...")
-        @RequestHeader("Authorization") authHeader: String,
+        @RequestHeader(HttpConstants.HEADER_AUTHORIZATION) authHeader: String,
 
         @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "Optional refresh token to invalidate")
         @RequestBody(required = false) request: LogoutRequest?
     ): ResponseEntity<ApiResponse<Unit>> {
-        val accessToken = if (authHeader.startsWith("Bearer ")) {
-            authHeader.substring(7)
+        val accessToken = if (authHeader.startsWith(HttpConstants.BEARER_PREFIX)) {
+            authHeader.substring(HttpConstants.BEARER_PREFIX_LENGTH)
         } else authHeader
 
         logger.info("Logout request received")

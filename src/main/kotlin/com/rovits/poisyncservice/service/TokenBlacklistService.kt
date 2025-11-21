@@ -1,5 +1,6 @@
 package com.rovits.poisyncservice.service
 
+import com.rovits.poisyncservice.constants.CacheConstants
 import org.springframework.data.redis.core.StringRedisTemplate
 import org.springframework.stereotype.Service
 import java.time.Duration
@@ -9,7 +10,7 @@ class TokenBlacklistService(
     private val redisTemplate: StringRedisTemplate
 ) {
     companion object {
-        private const val BLACKLIST_PREFIX = "blacklist:"
+        private const val BLACKLIST_PREFIX = CacheConstants.PREFIX_BLACKLIST
     }
 
     /**

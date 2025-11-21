@@ -1,7 +1,10 @@
 package com.rovits.poisyncservice.config
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.rovits.poisyncservice.constants.ApiEndpoints
+import com.rovits.poisyncservice.constants.CacheConstants
 import com.rovits.poisyncservice.constants.DefaultValues
+import com.rovits.poisyncservice.constants.HttpConstants
 import com.rovits.poisyncservice.dto.response.ApiResponse
 import com.rovits.poisyncservice.dto.response.ErrorDetail
 import com.rovits.poisyncservice.exception.ErrorCodes
@@ -36,10 +39,10 @@ class RateLimitFilter(
     ) {
         val path = request.requestURI
 
-        if (path.startsWith("/actuator/health") ||
-            path.startsWith("/v3/api-docs") ||
-            path.startsWith("/swagger-ui") ||
-            path == "/swagger-ui.html"
+        if (path.startsWith(ApiEndpoints.ACTUATOR_HEALTH) ||
+            path.startsWith(ApiEndpoints.OPENAPI_DOCS) ||
+            path.startsWith(ApiEndpoints.SWAGGER_UI) ||
+            path == ApiEndpoints.SWAGGER_UI_HTML
         ) {
             filterChain.doFilter(request, response)
             return
@@ -51,9 +54,9 @@ class RateLimitFilter(
         } else null
 
         val (key, limit) = if (userEmail != null) {
-            Pair("user:$userEmail", authenticatedLimit)
+            Pair("${CacheConstants.PREFIX_USER}$userEmail", authenticatedLimit)
         } else {
-            Pair("ip:${getClientIp(request)}", anonymousLimit)
+            Pair("${CacheConstants.PREFIX_IP}${getClientIp(request)}", anonymousLimit)
         }
 
         if (rateLimitService.isRateLimitExceeded(key, limit, periodSeconds.toInt())) {
@@ -65,14 +68,14 @@ class RateLimitFilter(
     }
 
     private fun extractToken(request: HttpServletRequest): String? {
-        val header = request.getHeader("Authorization")
-        return if (header != null && header.startsWith("Bearer ")) {
-            header.substring(7)
+        val header = request.getHeader(HttpConstants.HEADER_AUTHORIZATION)
+        return if (header != null && header.startsWith(HttpConstants.BEARER_PREFIX)) {
+            header.substring(HttpConstants.BEARER_PREFIX_LENGTH)
         } else null
     }
 
     private fun getClientIp(request: HttpServletRequest): String {
-        val xForwardedFor = request.getHeader("X-Forwarded-For")
+        val xForwardedFor = request.getHeader(HttpConstants.HEADER_X_FORWARDED_FOR)
         return if (!xForwardedFor.isNullOrEmpty()) {
             xForwardedFor.split(",")[0].trim()
         } else {
@@ -83,7 +86,7 @@ class RateLimitFilter(
     private fun writeTooManyRequestsResponse(response: HttpServletResponse) {
         response.status = HttpStatus.TOO_MANY_REQUESTS.value()
         response.contentType = MediaType.APPLICATION_JSON_VALUE
-        response.characterEncoding = "UTF-8"
+        response.characterEncoding = HttpConstants.ENCODING_UTF_8
 
         val message = messageResolver.resolve(MessageKeys.RATE_LIMIT_EXCEEDED)
 

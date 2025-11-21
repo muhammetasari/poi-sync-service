@@ -1,5 +1,6 @@
 package com.rovits.poisyncservice.service
 
+import com.rovits.poisyncservice.constants.SecurityConstants
 import com.rovits.poisyncservice.domain.document.UserDocument
 import com.rovits.poisyncservice.exception.AuthenticationException
 import com.rovits.poisyncservice.exception.ErrorCodes
@@ -30,7 +31,7 @@ class JwtService(
 
             Jwts.builder()
                 .subject(user.email)
-                .claim("userId", user.id)
+                .claim(SecurityConstants.JWT_CLAIM_USER_ID, user.id)
                 .issuedAt(Date.from(now))
                 .expiration(Date.from(expiryDate))
                 .signWith(key)
@@ -47,7 +48,7 @@ class JwtService(
     fun generateRefreshToken(user: UserDocument): String {
         return try {
             val now = Date().toInstant()
-            val expiryDate = now.plusMillis(expirationMs * 7)
+            val expiryDate = now.plusMillis(expirationMs * SecurityConstants.JWT_REFRESH_TOKEN_MULTIPLIER)
 
             Jwts.builder()
                 .subject(user.email)

@@ -2,6 +2,7 @@ package com.rovits.poisyncservice.service
 
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseToken
+import com.rovits.poisyncservice.constants.SecurityConstants
 import com.rovits.poisyncservice.domain.document.UserDocument
 import com.rovits.poisyncservice.domain.dto.*
 import com.rovits.poisyncservice.domain.enums.AuthProvider
@@ -25,12 +26,8 @@ class AuthService(
     private val logger = LoggerFactory.getLogger(AuthService::class.java)
 
     companion object {
-        private const val MIN_PASSWORD_LENGTH = 8
-        private val PASSWORD_BLACKLIST = setOf(
-            "password", "12345678", "qwerty", "letmein", "123456789",
-            "admin", "welcome", "abc123", "11111111", "123123",
-            "password123", "admin123", "test123", "user", "root"
-        )
+        private const val MIN_PASSWORD_LENGTH = SecurityConstants.MIN_PASSWORD_LENGTH
+        private val PASSWORD_BLACKLIST = SecurityConstants.PASSWORD_BLACKLIST
     }
 
     fun logout(accessToken: String, refreshToken: String?) {
@@ -201,11 +198,11 @@ class AuthService(
     private fun validatePassword(password: String) {
         when {
             password.length < MIN_PASSWORD_LENGTH ->
-                throwPasswordPolicyException("too.short")
+                throwPasswordPolicyException(SecurityConstants.PASSWORD_REASON_TOO_SHORT)
             !password.any { it.isDigit() } ->
-                throwPasswordPolicyException("missing.digit")
+                throwPasswordPolicyException(SecurityConstants.PASSWORD_REASON_MISSING_DIGIT)
             PASSWORD_BLACKLIST.contains(password.lowercase()) ->
-                throwPasswordPolicyException("blacklisted")
+                throwPasswordPolicyException(SecurityConstants.PASSWORD_REASON_BLACKLISTED)
             else -> return
         }
     }
