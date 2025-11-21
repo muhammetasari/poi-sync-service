@@ -1,8 +1,142 @@
-# 📋 Dokümantasyon Güncelleme Özeti
+# 📋 CHANGELOG - Proje Değişiklik Geçmişi
 
-**Tarih:** 22 Kasım 2025
+**Tarih:** 22 Kasım 2025  
+**Versiyon:** 1.1.0
 
-## ✅ Güncellenen Dosyalar
+---
+
+## 🎯 Özet
+
+Bu sürümde **MessageKeys i18n iyileştirmeleri** ve **dokümantasyon güncellemeleri** gerçekleştirildi.
+
+### Öne Çıkan Değişiklikler
+- ✅ MessageKeys sistemi %100 i18n coverage'a ulaştı
+- ✅ Hardcoded string'ler tamamen kaldırıldı
+- ✅ 12 yeni MessageKey sabiti eklendi
+- ✅ 4 Türkçe çeviri tamamlandı
+- ✅ Dokümantasyon kapsamlı güncellendi
+
+---
+
+## 🔧 Kod Değişiklikleri
+
+### MessageKeys İyileştirmeleri
+
+#### 1. `src/main/kotlin/com/rovits/poisyncservice/util/MessageKeys.kt`
+**Değişiklikler:**
+- ✅ 12 yeni MessageKey sabiti eklendi:
+  - Cache: `CACHE_UNAVAILABLE`, `CACHE_SERIALIZATION_FAILED`, `CACHE_CONNECTION_FAILED`
+  - Database: `DATABASE_UNAVAILABLE`, `DATABASE_CONNECTION_FAILED`
+  - Firebase: `FIREBASE_FAILED`, `FIREBASE_UNAVAILABLE`
+  - POI: `POI_NOT_FOUND`
+  - Validation: `VALIDATION_TYPE_MISMATCH`, `VALIDATION_JSON_MALFORMED`
+- ✅ `TOO_MANY_REQUESTS` kaldırıldı (RATE_LIMIT_EXCEEDED ile birleştirildi)
+- ✅ Kategorize edilmiş yorum yapısı düzenlendi
+
+**İyileştirme:**
+```kotlin
+// Öncesi
+const val TOO_MANY_REQUESTS = "error.too.many.requests"
+const val RATE_LIMIT_EXCEEDED = "error.rate.limit.exceeded"
+
+// Sonrası (Sadece bir tane)
+const val RATE_LIMIT_EXCEEDED = "error.rate.limit.exceeded"
+```
+
+---
+
+#### 2. `src/main/resources/messages.properties`
+**Değişiklikler:**
+- ✅ 2 yeni validation mesajı eklendi:
+  ```properties
+  error.validation.type.mismatch=Invalid value for parameter '{0}'. Expected type: {1}
+  error.validation.json.malformed=Malformed JSON request body
+  ```
+
+---
+
+#### 3. `src/main/resources/messages_tr.properties`
+**Değişiklikler:**
+- ✅ 4 Türkçe çeviri eklendi:
+  ```properties
+  error.validation.password.strength=Şifre en az bir büyük harf, bir küçük harf ve bir rakam içermelidir
+  error.validation.provider.invalid=Sağlayıcı google, facebook veya apple olmalıdır
+  error.validation.type.mismatch='{0}' parametresi için geçersiz değer. Beklenen tip: {1}
+  error.validation.json.malformed=Hatalı JSON istek gövdesi
+  ```
+
+---
+
+#### 4. `src/main/kotlin/com/rovits/poisyncservice/config/GlobalExceptionHandler.kt`
+**Değişiklikler:**
+- ✅ 4 hardcoded string MessageKeys'e taşındı:
+
+**4.1. handleTypeMismatch()**
+```kotlin
+// Öncesi
+val message = "Invalid value for parameter '${ex.name}'. Expected type: ${ex.requiredType?.simpleName}"
+
+// Sonrası
+val message = messageResolver.resolve(
+    MessageKeys.VALIDATION_TYPE_MISMATCH,
+    ex.name,
+    ex.requiredType?.simpleName ?: "Unknown"
+)
+```
+
+**4.2. handleHttpMessageNotReadable()**
+```kotlin
+// Öncesi
+val message = "Malformed JSON request body"
+
+// Sonrası
+val message = messageResolver.resolve(MessageKeys.VALIDATION_JSON_MALFORMED)
+```
+
+**4.3. handleWebClientException()**
+```kotlin
+// Öncesi
+val message = messageResolver.resolve(MessageKeys.EXTERNAL_SERVICE_TIMEOUT, "External Service")
+val errorDetail = ErrorDetail.of(code = ErrorCodes.EXTERNAL_SERVICE_TIMEOUT, message = message)
+
+// Sonrası
+val message = messageResolver.resolve(MessageKeys.GOOGLE_API_UNAVAILABLE)
+val errorDetail = ErrorDetail.of(code = ErrorCodes.GOOGLE_API_UNAVAILABLE, message = message)
+```
+
+**4.4. handleBindException()**
+```kotlin
+// Öncesi
+FieldError(
+    field = fieldError.field,
+    message = fieldError.defaultMessage ?: "Invalid value",
+    rejectedValue = fieldError.rejectedValue
+)
+
+// Sonrası
+val localizedMessage = messageResolver.resolveOrDefault(
+    messageKey = fieldError.defaultMessage ?: MessageKeys.VALIDATION_FAILED,
+    defaultMessage = "Invalid value",
+    fieldError.rejectedValue ?: ""
+)
+FieldError(field = fieldError.field, message = localizedMessage, rejectedValue = fieldError.rejectedValue)
+```
+
+---
+
+#### 5. `src/main/kotlin/com/rovits/poisyncservice/config/RateLimitFilter.kt`
+**Değişiklikler:**
+- ✅ `MessageKeys.TOO_MANY_REQUESTS` → `MessageKeys.RATE_LIMIT_EXCEEDED`
+
+---
+
+#### 6. `src/main/kotlin/com/rovits/poisyncservice/config/ApiKeyFilter.kt`
+**Değişiklikler:**
+- ✅ `MessageKeys.TOO_MANY_REQUESTS` → `MessageKeys.RATE_LIMIT_EXCEEDED`
+
+---
+
+## 📚 Dokümantasyon Güncellemeleri
 
 ### 1. `docs/README.md`
 **Değişiklikler:**

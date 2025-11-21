@@ -123,9 +123,15 @@ class GlobalExceptionHandler(
         logger.warn("Bind exception occurred: {} field errors", ex.bindingResult.errorCount)
 
         val fieldErrors = ex.bindingResult.fieldErrors.map { fieldError ->
+            val localizedMessage = messageResolver.resolveOrDefault(
+                messageKey = fieldError.defaultMessage ?: MessageKeys.VALIDATION_FAILED,
+                defaultMessage = "Invalid value",
+                fieldError.rejectedValue ?: ""
+            )
+
             FieldError(
                 field = fieldError.field,
-                message = fieldError.defaultMessage ?: "Invalid value",
+                message = localizedMessage,
                 rejectedValue = fieldError.rejectedValue
             )
         }
@@ -167,7 +173,11 @@ class GlobalExceptionHandler(
     ): ResponseEntity<ApiResponse<Nothing>> {
         logger.warn("Type mismatch for parameter: {}", ex.name)
 
-        val message = "Invalid value for parameter '${ex.name}'. Expected type: ${ex.requiredType?.simpleName}"
+        val message = messageResolver.resolve(
+            MessageKeys.VALIDATION_TYPE_MISMATCH,
+            ex.name,
+            ex.requiredType?.simpleName ?: "Unknown"
+        )
 
         val errorDetail = ErrorDetail.withField(
             code = ErrorCodes.VALIDATION_FAILED,
@@ -184,7 +194,7 @@ class GlobalExceptionHandler(
     ): ResponseEntity<ApiResponse<Nothing>> {
         logger.warn("Malformed JSON request: {}", ex.message)
 
-        val message = "Malformed JSON request body"
+        val message = messageResolver.resolve(MessageKeys.VALIDATION_JSON_MALFORMED)
 
         val errorDetail = ErrorDetail.of(
             code = ErrorCodes.VALIDATION_FAILED,
@@ -306,10 +316,10 @@ class GlobalExceptionHandler(
     fun handleWebClientException(ex: WebClientException): ResponseEntity<ApiResponse<Nothing>> {
         logger.error("External service connection error", ex)
 
-        val message = messageResolver.resolve(MessageKeys.EXTERNAL_SERVICE_TIMEOUT, "External Service")
+        val message = messageResolver.resolve(MessageKeys.GOOGLE_API_UNAVAILABLE)
 
         val errorDetail = ErrorDetail.of(
-            code = ErrorCodes.EXTERNAL_SERVICE_TIMEOUT,
+            code = ErrorCodes.GOOGLE_API_UNAVAILABLE,
             message = message
         )
 

@@ -44,17 +44,38 @@ object MessageKeys {
     const val GOOGLE_API_FAILED = "error.google.api.failed"
     const val GOOGLE_API_UNAVAILABLE = "error.google.api.unavailable"
     const val EXTERNAL_SERVICE_TIMEOUT = "error.external.service.timeout"
+
+    // Firebase
+    const val FIREBASE_FAILED = "error.firebase.failed"
+    const val FIREBASE_UNAVAILABLE = "error.firebase.unavailable"
+
+    // Database
     const val DATABASE_FAILED = "error.database.failed"
     const val DATABASE_DUPLICATE_KEY = "error.database.duplicate.key"
+    const val DATABASE_UNAVAILABLE = "error.database.unavailable"
+    const val DATABASE_CONNECTION_FAILED = "error.database.connection.failed"
+
+    // Cache
     const val CACHE_OPERATION_FAILED = "error.cache.operation.failed"
+    const val CACHE_UNAVAILABLE = "error.cache.unavailable"
+    const val CACHE_SERIALIZATION_FAILED = "error.cache.serialization.failed"
+    const val CACHE_CONNECTION_FAILED = "error.cache.connection.failed"
+
+    // System
     const val INTERNAL_SERVER_ERROR = "error.internal.server"
-    const val TOO_MANY_REQUESTS = "error.too.many.requests"
     const val RATE_LIMIT_EXCEEDED = "error.rate.limit.exceeded"
 
     // ===================================
     // POI
     // ===================================
+    const val POI_NOT_FOUND = "error.poi.not.found"
     const val POI_SYNC_FAILED = "error.poi.sync.failed"
     const val POI_UNKNOWN_NAME = "poi.unknown.name"
     const val POI_UNKNOWN_ADDRESS = "poi.unknown.address"
+
+    // ===================================
+    // VALIDATION - ADDITIONAL
+    // ===================================
+    const val VALIDATION_TYPE_MISMATCH = "error.validation.type.mismatch"
+    const val VALIDATION_JSON_MALFORMED = "error.validation.json.malformed"
 }

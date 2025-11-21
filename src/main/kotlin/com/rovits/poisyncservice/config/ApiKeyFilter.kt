@@ -51,7 +51,7 @@ class ApiKeyFilter(
             response.status = 429
             response.contentType = MediaType.APPLICATION_JSON_VALUE
             response.characterEncoding = "UTF-8"
-            val message = messageResolver.resolve(MessageKeys.TOO_MANY_REQUESTS)
+            val message = messageResolver.resolve(MessageKeys.RATE_LIMIT_EXCEEDED)
             val errorDetail = ErrorDetail.of(
                 ErrorCodes.RATE_LIMIT_EXCEEDED,
                 message
