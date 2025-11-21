@@ -1,9 +1,11 @@
 package com.rovits.poisyncservice.config
 
+import io.micrometer.registry.otlp.OtlpMeterRegistry
 import io.opentelemetry.api.common.AttributeKey
 import io.opentelemetry.api.common.Attributes
 import io.opentelemetry.sdk.resources.Resource
 import org.slf4j.LoggerFactory
+import org.springframework.boot.actuate.autoconfigure.metrics.MeterRegistryCustomizer
 import org.springframework.boot.context.event.ApplicationReadyEvent
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
@@ -40,6 +42,32 @@ class MetricsConfig(
                 .put(AttributeKey.stringKey("deployment.environment"), deploymentEnvironment)
                 .build()
         )
+    }
+
+    @Bean
+    fun otlpMeterRegistryCustomizer(): MeterRegistryCustomizer<OtlpMeterRegistry> {
+        val serviceName = environment.getProperty(
+            "management.otlp.metrics.export.resource-attributes[service.name]",
+            "poi-sync-service"
+        )
+        val serviceVersion = environment.getProperty(
+            "management.otlp.metrics.export.resource-attributes[service.version]",
+            "0.0.1-SNAPSHOT"
+        )
+        val deploymentEnvironment = environment.getProperty(
+            "management.otlp.metrics.export.resource-attributes[deployment.environment]",
+            environment.activeProfiles.firstOrNull() ?: "unknown"
+        )
+
+        logger.info("🎯 Configuring OTLP MeterRegistry with service.name=$serviceName")
+
+        return MeterRegistryCustomizer { registry ->
+            registry.config().commonTags(
+                "service.name", serviceName,
+                "service.version", serviceVersion,
+                "deployment.environment", deploymentEnvironment
+            )
+        }
     }
 
     @EventListener(ApplicationReadyEvent::class)
