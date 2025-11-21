@@ -6,6 +6,8 @@ import com.rovits.poisyncservice.dto.response.ErrorDetail
 import com.rovits.poisyncservice.exception.ErrorCodes
 import com.rovits.poisyncservice.util.MessageKeys
 import com.rovits.poisyncservice.util.MessageResolver
+import com.rovits.poisyncservice.service.RateLimitService
+import com.rovits.poisyncservice.constants.DefaultValues
 import jakarta.servlet.FilterChain
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
@@ -19,7 +21,8 @@ class ApiKeyFilter(
     @Value("\${api.key.header}") private val apiKeyHeader: String,
     @Value("\${api.key.value}") private val apiKeyValue: String,
     private val objectMapper: ObjectMapper,
-    private val messageResolver: MessageResolver
+    private val messageResolver: MessageResolver,
+    private val rateLimitService: RateLimitService
 ) : OncePerRequestFilter() {
 
     override fun doFilterInternal(
@@ -40,6 +43,24 @@ class ApiKeyFilter(
 
         val providedKey = request.getHeader(apiKeyHeader)
 
+        // Rate limit kontrolü (API Key bazlı)
+        val rateLimitKey = "apikey:${providedKey ?: "unknown"}"
+        val limit = DefaultValues.DEFAULT_RATE_LIMIT_AUTHENTICATED
+        val period = DefaultValues.DEFAULT_RATE_LIMIT_PERIOD_SECONDS.toInt()
+        if (rateLimitService.isRateLimitExceeded(rateLimitKey, limit, period)) {
+            response.status = 429
+            response.contentType = MediaType.APPLICATION_JSON_VALUE
+            response.characterEncoding = "UTF-8"
+            val message = messageResolver.resolve(MessageKeys.TOO_MANY_REQUESTS)
+            val errorDetail = ErrorDetail.of(
+                ErrorCodes.RATE_LIMIT_EXCEEDED,
+                message
+            )
+            val apiResponse = ApiResponse.error(errorDetail)
+            objectMapper.writeValue(response.writer, apiResponse)
+            return
+        }
+
         if (providedKey == null || providedKey != apiKeyValue) {
             response.status = HttpServletResponse.SC_UNAUTHORIZED
             response.contentType = MediaType.APPLICATION_JSON_VALUE
@@ -52,7 +73,7 @@ class ApiKeyFilter(
                 "$message (API Key Missing or Invalid)"
             )
 
-            val apiResponse = ApiResponse.error<Any>(errorDetail)
+            val apiResponse = ApiResponse.error(errorDetail)
 
             objectMapper.writeValue(response.writer, apiResponse)
             return

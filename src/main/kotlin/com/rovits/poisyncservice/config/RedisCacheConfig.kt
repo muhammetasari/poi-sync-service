@@ -1,10 +1,11 @@
 package com.rovits.poisyncservice.config
 
+import com.fasterxml.jackson.annotation.JsonTypeInfo
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.SerializationFeature
+import com.fasterxml.jackson.databind.jsontype.BasicPolymorphicTypeValidator
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
-import com.rovits.poisyncservice.domain.dto.PlaceDetails
 import org.slf4j.LoggerFactory
 import org.springframework.cache.annotation.EnableCaching
 import org.springframework.context.annotation.Bean
@@ -24,15 +25,21 @@ class RedisCacheConfig {
 
     @Bean
     fun cacheManager(connectionFactory: RedisConnectionFactory): RedisCacheManager {
-        logger.info("Configuring Redis Cache Manager")
+        logger.info("Configuring Generic Redis Cache Manager")
+
+        val ptv = BasicPolymorphicTypeValidator.builder()
+            .allowIfBaseType(Any::class.java)
+            .build()
 
         val objectMapper = ObjectMapper().apply {
             registerKotlinModule()
             registerModule(JavaTimeModule())
             disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
+            activateDefaultTyping(ptv, ObjectMapper.DefaultTyping.NON_FINAL, JsonTypeInfo.As.PROPERTY)
         }
 
-        val serializer = Jackson2JsonRedisSerializer(objectMapper, PlaceDetails::class.java)
+        // Serileştiriciyi belirli bir sınıf yerine genel Object sınıfı için oluştururuz.
+        val serializer = Jackson2JsonRedisSerializer(objectMapper, Object::class.java)
 
         val config = RedisCacheConfiguration.defaultCacheConfig()
             .entryTtl(Duration.ofHours(24))
@@ -43,7 +50,7 @@ class RedisCacheConfig {
                 RedisSerializationContext.SerializationPair.fromSerializer(serializer)
             )
 
-        logger.info("Redis cache configured: TTL=24h, cacheName=placeDetails")
+        logger.info("Generic Redis cache configured: TTL=24h")
 
         return RedisCacheManager.builder(connectionFactory)
             .cacheDefaults(config)

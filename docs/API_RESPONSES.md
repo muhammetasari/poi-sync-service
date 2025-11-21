@@ -47,6 +47,51 @@ Başarılı yanıtlar ile hata yanıtları arasında `success` bayrağı ve `dat
 }
 ```
 
+#### Örnek - Logout Başarılı
+
+```json
+{
+  "success": true,
+  "data": null,
+  "timestamp": "2025-11-22T15:30:00"
+}
+```
+
+#### Örnek - Sync İsteği Kabul Edildi (202 Accepted)
+
+```json
+{
+  "success": true,
+  "data": "job-uuid-12345",
+  "timestamp": "2025-11-22T16:00:00"
+}
+```
+
+#### Örnek - Sync Job Durumu (COMPLETED)
+
+```json
+{
+  "success": true,
+  "data": {
+    "status": "COMPLETED"
+  },
+  "timestamp": "2025-11-22T16:05:30"
+}
+```
+
+#### Örnek - Sync Job Durumu (FAILED)
+
+```json
+{
+  "success": true,
+  "data": {
+    "status": "FAILED",
+    "error": "Google API rate limit exceeded"
+  },
+  "timestamp": "2025-11-22T16:03:15"
+}
+```
+
 ---
 
 ### 🔴 Hata Response (Genel)
@@ -123,6 +168,30 @@ Başarılı yanıtlar ile hata yanıtları arasında `success` bayrağı ve `dat
 }
 ```
 
+### 🟤 Rate Limit Hatası
+
+```json
+{
+  "success": false,
+  "code": "AUTH_008",
+  "message": "Çok fazla istek gönderdiniz. Lütfen daha sonra tekrar deneyin.",
+  "errors": null,
+  "timestamp": "2025-11-22T14:25:12"
+}
+```
+
+### 🟡 E-posta Doğrulanmamış Hatası
+
+```json
+{
+  "success": false,
+  "code": "AUTH_009",
+  "message": "user@example.com kullanıcısı için e-posta doğrulanmamış. Lütfen e-postanızı doğrulayın.",
+  "errors": null,
+  "timestamp": "2025-11-22T14:30:45"
+}
+```
+
 ---
 
 ### ⬛ Sistem Hatası (Bilinmeyen/500)
@@ -151,6 +220,6 @@ Başarılı yanıtlar ile hata yanıtları arasında `success` bayrağı ve `dat
 - **Başarılı yanıtlar** her zaman `success: true`, **hatalı yanıtlar** ise `success: false` ile başlar.
 - Detaylı validasyon hatalarında `errors` dizisi; genel sistem/app hatalarında `errors` alanı `null` olur.
 - `code` alanları ve anlamları için bkz: [ERROR_CODES.md](./ERROR_CODES.md)
-- Gelişmiş/detaylı endpoint örnekleri için Postman Koleksiyonu'nu kullanabilirsiniz.
+- Gelişmiş/detaylı endpoint örnekleri için Postman Koleksiyonu'nu veya **Swagger UI** (`/swagger-ui.html`) kullanabilirsiniz.
 
 ---

@@ -29,6 +29,11 @@ Her hata kodu, sistemdeki hata tipini kolay anlaşılır ve takip edilebilir kı
 | AUTH_005      | error.firebase.token.invalid    | Firebase token geçersiz                |
 | AUTH_006      | error.jwt.generation.failed     | JWT token üretilemedi                  |
 | AUTH_007      | error.missing.authentication    | Kimlik doğrulama bilgisi eksik         |
+| AUTH_008      | error.too.many.requests         | Rate limit aşıldı                      |
+| AUTH_009      | error.auth.email.not.verified   | E-posta doğrulanmamış                  |
+| AUTH_010      | error.auth.provider.mismatch    | Sağlayıcı uyumsuzluğu                  |
+| AUTH_011      | error.validation.invalid.token  | Token geçersiz veya bozulmuş           |
+| AUTH_012      | error.email.already.verified    | E-posta zaten doğrulanmış              |
 
 ---
 
@@ -48,6 +53,7 @@ Her hata kodu, sistemdeki hata tipini kolay anlaşılır ve takip edilebilir kı
 | VAL_010       | error.validation.password.min         | Şifre minimum uzunluk hatası                    |
 | VAL_011       | error.validation.password.strength    | Şifre karmaşıklık/güçlük hatası                |
 | VAL_012       | error.validation.provider.invalid     | Sağlayıcı (provider) değeri yanlış              |
+| VAL_013       | error.validation.password.policy      | Şifre politikası hatası                         |
 
 ---
 
@@ -105,7 +111,7 @@ Her hata kodu, sistemdeki hata tipini kolay anlaşılır ve takip edilebilir kı
 | SYS_001       | error.internal.server         | Sunucu (internal server) hatası        |
 | SYS_002       | error.service.unavailable     | Servis geçici olarak kullanılamıyor    |
 | SYS_003       | error.configuration           | Genel sistem yapılandırma hatası       |
-| SYS_004       | error.unknown                 | Bilinmeyen hata                        |
+| SYS_999       | error.unknown                 | Bilinmeyen hata                        |
 
 ---
 

@@ -8,27 +8,30 @@ POI (Point of Interest) senkronizasyon servisi, Google Places API ile entegre ç
 
 - **Kotlin 1.9.25** & **Java 17** – Modern, tip güvenli programlama ve JVM desteği
 - **Spring Boot 3.5.7** – Gelişmiş backend çatısı
-- **Spring Web / WebFlux** – Hem klasik hem reaktif REST API’ler
-- **Spring Security & JWT** – Kimlik doğrulama, endpoint koruması
+- **Spring Web / WebFlux** – Hem klasik hem reaktif REST API'ler
+- **Spring Security & JWT (0.12.5)** – Kimlik doğrulama, endpoint koruması
 - **MongoDB (Atlas)** & **Redis (Upstash Cloud)** – NoSQL ve caching
-- **Google Places API, Firebase Admin SDK** – Harici sistem entegrasyonu
+- **Google Places API, Firebase Admin SDK 9.2.0** – Harici sistem entegrasyonu
+- **SpringDoc OpenAPI 2.8.14** – Swagger UI ile otomatik API dokümantasyonu
 - **Gradle 8.5** – Build management ve bağımlılık yönetimi
 - **Docker & Docker Compose** – Kolay deploy & local setup
-- **Test Stack:** JUnit 5, MockK, Testcontainers, WireMock, Spring Security Test
+- **Test Stack:** JUnit 5, MockK 1.13.8, Testcontainers 1.19.3, WireMock 3.3.1, Spring Security Test
 
 ---
 
 ## 🏗️ Başlıca Özellikler
 
-- ✅ RESTful ve reaktif endpoint’ler
+- ✅ RESTful ve reaktif endpoint'ler
 - ✅ JWT tabanlı authentication
-- ✅ Redis ile cache (24s TTL, SSL’li bağlantı)
+- ✅ Redis ile cache (24s TTL, SSL'li bağlantı)
 - ✅ MongoDB ile veri saklama
 - ✅ Google & Firebase entegrasyonları
 - ✅ API key ile erişim yetkilendirme
 - ✅ Kapsamlı hata ve validasyon yönetimi (i18n)
 - ✅ Çoklu dil: Türkçe, İngilizce ve kolay eklenebilir diller
-- ✅ Health/metrics endpoint’leri (Spring Actuator)
+- ✅ Swagger/OpenAPI UI ile interaktif API dokümantasyonu
+- ✅ Health/metrics endpoint'leri (Spring Actuator)
+- ✅ Asenkron POI senkronizasyon işi (Job-based)
 - ✅ Dokümantasyon dosyaları ve hazır Postman koleksiyonu
 
 ---
@@ -81,14 +84,16 @@ docker-compose up --build
 |--------------------------------|-------|-----------------------------------|
 | /api/auth/register             | POST  | Kullanıcı kaydı                   |
 | /api/auth/login                | POST  | Kullanıcı girişi                  |
-| /api/auth/social-login         | POST  | Sosyal login                      |
-| /api/sync/locations            | POST  | POI senkronizasyonu başlat        |
+| /api/auth/social-login         | POST  | Sosyal login (Google/Firebase)    |
+| /api/auth/logout               | POST  | Kullanıcı çıkışı (token blacklist)|
+| /api/sync/locations            | POST  | POI senkronizasyonu başlat (Async)|
+| /api/sync/status/{jobId}       | GET   | Sync job durumu sorgula           |
 | /api/places/nearby             | GET   | Yakındaki POI arama               |
 | /api/places/text-search        | GET   | Metin üzerinden POI arama         |
 | /api/places/details/{placeId}  | GET   | POI detay sorgusu                 |
-| /actuator/health               | GET   | Healthcheck endpoint’i            |
+| /actuator/health               | GET   | Healthcheck endpoint'i            |
 
-Daha fazlası için Postman koleksiyonunu veya docs/ dizinini inceleyin.
+Daha fazlası için Postman koleksiyonunu, **Swagger UI** (`/swagger-ui.html`) veya docs/ dizinini inceleyin.
 
 ---
 
@@ -150,10 +155,11 @@ Test coverage ve örnekler için:
 
 ## 📝 Diğer Dokümantasyon Dosyaları
 
+- [ENDPOINTS.md](./ENDPOINTS.md) — Detaylı endpoint referansı ve örnekleri
 - [ERROR_CODES.md](./ERROR_CODES.md) — Hata kodları ve açıklamaları
 - [API_RESPONSES.md](./API_RESPONSES.md) — Yanıt formatı örnekleri
 - [i18n_GUIDE.md](./i18n_GUIDE.md) — Yeni dil ekleme, i18n yapısı
-- Postman koleksiyonu: `docs/POI-Sync-Service.postman_collection.json`
+- Postman koleksiyonu: `postman_collection.json` (proje kök dizininde)
 
 ---
 

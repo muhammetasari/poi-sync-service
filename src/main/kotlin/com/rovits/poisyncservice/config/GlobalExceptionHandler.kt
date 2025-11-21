@@ -1,5 +1,6 @@
 package com.rovits.poisyncservice.config
 
+import com.fasterxml.jackson.databind.ObjectMapper
 import com.rovits.poisyncservice.dto.response.ApiResponse
 import com.rovits.poisyncservice.dto.response.ErrorDetail
 import com.rovits.poisyncservice.dto.response.FieldError
@@ -29,12 +30,20 @@ import java.net.URI
 @RestControllerAdvice
 class GlobalExceptionHandler(
     private val messageResolver: MessageResolver,
+    private val objectMapper: ObjectMapper,
     @Value("\${spring.profiles.active:dev}") private val activeProfile: String
 ) {
     private val logger = LoggerFactory.getLogger(GlobalExceptionHandler::class.java)
 
     private val isDevelopment: Boolean
         get() = activeProfile.contains("dev") || activeProfile.contains("local")
+
+    /**
+     * Convert Map to JsonNode for ErrorDetail.details field
+     */
+    private fun mapToJsonNode(map: Map<String, Any?>): com.fasterxml.jackson.databind.JsonNode {
+        return objectMapper.valueToTree(map)
+    }
 
     // ========================================
     // CUSTOM EXCEPTIONS
@@ -247,10 +256,10 @@ class GlobalExceptionHandler(
             ErrorDetail.withDetails(
                 code = ErrorCodes.DATABASE_ERROR,
                 message = message,
-                details = mapOf(
+                details = mapToJsonNode(mapOf(
                     "exceptionType" to ex::class.simpleName!!,
                     "cause" to (ex.cause?.message ?: "Unknown")
-                )
+                ))
             )
         } else {
             ErrorDetail.of(
@@ -278,10 +287,10 @@ class GlobalExceptionHandler(
             ErrorDetail.withDetails(
                 code = ErrorCodes.GOOGLE_API_ERROR,
                 message = message,
-                details = mapOf(
+                details = mapToJsonNode(mapOf(
                     "status" to ex.statusCode.value(),
                     "response" to ex.responseBodyAsString
-                )
+                ))
             )
         } else {
             ErrorDetail.of(
@@ -321,11 +330,11 @@ class GlobalExceptionHandler(
             ErrorDetail.withDetails(
                 code = ErrorCodes.INTERNAL_SERVER_ERROR,
                 message = message,
-                details = mapOf(
+                details = mapToJsonNode(mapOf(
                     "exceptionType" to ex::class.simpleName!!,
                     "message" to (ex.message ?: "No message"),
                     "stackTrace" to ex.stackTrace.take(5).map { it.toString() }
-                )
+                ))
             )
         } else {
             ErrorDetail.of(

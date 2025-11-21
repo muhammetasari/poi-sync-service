@@ -61,10 +61,10 @@ class PlacesController(
         @RequestParam lng: Double,
 
         @Parameter(description = "Search radius in meters", example = "1000.0", required = false)
-        @RequestParam(required = false, defaultValue = "5000.0") radius: Double,
+        @RequestParam(required = false, defaultValue = com.rovits.poisyncservice.constants.DefaultValues.DEFAULT_RADIUS_METERS.toString()) radius: Double,
 
         @Parameter(description = "Type of place to search for (e.g., restaurant, cafe)", example = "restaurant", required = false)
-        @RequestParam(required = false, defaultValue = "restaurant") type: String
+        @RequestParam(required = false, defaultValue = com.rovits.poisyncservice.constants.DefaultValues.DEFAULT_PLACE_TYPE) type: String
     ): ResponseEntity<ApiResponse<SearchNearbyResponse>> = runBlocking {
         val response = poiService.searchNearby(lat, lng, radius, type)
         return@runBlocking ResponseHelper.ok(response)
@@ -89,10 +89,10 @@ class PlacesController(
         @RequestParam query: String,
 
         @Parameter(description = "Language code for results", example = "tr", required = false)
-        @RequestParam(required = false, defaultValue = "tr") languageCode: String,
+        @RequestParam(required = false, defaultValue = com.rovits.poisyncservice.constants.DefaultValues.DEFAULT_LANGUAGE_CODE) languageCode: String,
 
         @Parameter(description = "Maximum number of results", example = "10", required = false)
-        @RequestParam(required = false, defaultValue = "20") maxResults: Int,
+        @RequestParam(required = false, defaultValue = com.rovits.poisyncservice.constants.DefaultValues.DEFAULT_MAX_RESULTS.toString()) maxResults: Int,
 
         @Parameter(description = "Optional latitude for location bias", example = "41.0082")
         @RequestParam(required = false) lat: Double?,

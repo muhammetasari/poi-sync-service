@@ -1,7 +1,11 @@
 package com.rovits.poisyncservice.service
 
 import com.rovits.poisyncservice.domain.document.UserDocument
+import com.rovits.poisyncservice.exception.AuthenticationException
+import com.rovits.poisyncservice.exception.ErrorCodes
+import com.rovits.poisyncservice.util.MessageKeys
 import io.jsonwebtoken.Claims
+import io.jsonwebtoken.ExpiredJwtException
 import io.jsonwebtoken.Jwts
 import io.jsonwebtoken.security.Keys
 import org.springframework.beans.factory.annotation.Value
@@ -9,6 +13,7 @@ import org.springframework.stereotype.Service
 import java.util.Date
 import javax.crypto.SecretKey
 
+@Suppress("DEPRECATION")
 @Service
 class JwtService(
     @Value("\${jwt.secret-key}") private val secretKey: String,
@@ -19,37 +24,55 @@ class JwtService(
     }
 
     fun generateToken(user: UserDocument): String {
-        val now = Date()
-        val expiryDate = Date(now.time + expirationMs)
+        return try {
+            val now = Date().toInstant()
+            val expiryDate = now.plusMillis(expirationMs)
 
-        val roles = user.roles.map { it.name }
-
-        return Jwts.builder()
-            .setSubject(user.email)
-            .claim("userId", user.id)
-            .claim("name", user.name)
-            .claim("roles", roles) // YENİ: Rolleri ekledik
-            .setIssuedAt(now)
-            .setExpiration(expiryDate)
-            .signWith(key)
-            .compact()
+            Jwts.builder()
+                .subject(user.email)
+                .claim("userId", user.id)
+                .issuedAt(Date.from(now))
+                .expiration(Date.from(expiryDate))
+                .signWith(key)
+                .compact()
+        } catch (e: Exception) {
+            throw AuthenticationException(
+                errorCode = ErrorCodes.JWT_GENERATION_FAILED,
+                messageKey = MessageKeys.JWT_GENERATION_FAILED,
+                cause = e
+            )
+        }
     }
 
     fun generateRefreshToken(user: UserDocument): String {
-        val now = Date()
-        val expiryDate = Date(now.time + expirationMs * 7)
+        return try {
+            val now = Date().toInstant()
+            val expiryDate = now.plusMillis(expirationMs * 7)
 
-        return Jwts.builder()
-            .setSubject(user.email)
-            .setIssuedAt(now)
-            .setExpiration(expiryDate)
-            .signWith(key)
-            .compact()
+            Jwts.builder()
+                .subject(user.email)
+                .issuedAt(Date.from(now))
+                .expiration(Date.from(expiryDate))
+                .signWith(key)
+                .compact()
+        } catch (e: Exception) {
+            throw AuthenticationException(
+                errorCode = ErrorCodes.JWT_GENERATION_FAILED,
+                messageKey = MessageKeys.JWT_GENERATION_FAILED,
+                cause = e
+            )
+        }
     }
 
     fun getEmailFromToken(token: String): String? {
         return try {
             getClaims(token).subject
+        } catch (e: ExpiredJwtException) {
+            throw AuthenticationException(
+                errorCode = ErrorCodes.TOKEN_EXPIRED,
+                messageKey = MessageKeys.TOKEN_EXPIRED,
+                cause = e
+            )
         } catch (e: Exception) {
             null
         }
@@ -59,17 +82,31 @@ class JwtService(
         return try {
             getClaims(token)
             true
+        } catch (e: ExpiredJwtException) {
+            throw AuthenticationException(
+                errorCode = ErrorCodes.TOKEN_EXPIRED,
+                messageKey = MessageKeys.TOKEN_EXPIRED,
+                cause = e
+            )
         } catch (e: Exception) {
             false
         }
     }
 
     private fun getClaims(token: String): Claims {
-        return Jwts.parser()
-            .setSigningKey(key)
-            .build()
-            .parseClaimsJws(token)
-            .body
+        try {
+            return Jwts.parser()
+                .setSigningKey(key)
+                .build()
+                .parseClaimsJws(token)
+                .body
+        } catch (e: ExpiredJwtException) {
+            throw AuthenticationException(
+                errorCode = ErrorCodes.TOKEN_EXPIRED,
+                messageKey = MessageKeys.TOKEN_EXPIRED,
+                cause = e
+            )
+        }
     }
 
     fun getExpirationDateFromToken(token: String): Date? {

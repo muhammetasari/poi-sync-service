@@ -1,6 +1,7 @@
 package com.rovits.poisyncservice.config
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.rovits.poisyncservice.constants.DefaultValues
 import com.rovits.poisyncservice.dto.response.ApiResponse
 import com.rovits.poisyncservice.dto.response.ErrorDetail
 import com.rovits.poisyncservice.exception.ErrorCodes
@@ -23,9 +24,9 @@ class RateLimitFilter(
     private val jwtService: JwtService,
     private val objectMapper: ObjectMapper,
     private val messageResolver: MessageResolver,
-    @Value("\${rate.limit.anonymous:20}") private val anonymousLimit: Int,
-    @Value("\${rate.limit.authenticated:100}") private val authenticatedLimit: Int,
-    @Value("\${rate.limit.period.seconds:60}") private val periodSeconds: Long
+    @Value("\${rate.limit.anonymous:" + DefaultValues.DEFAULT_RATE_LIMIT_ANONYMOUS + "}") private val anonymousLimit: Int,
+    @Value("\${rate.limit.authenticated:" + DefaultValues.DEFAULT_RATE_LIMIT_AUTHENTICATED + "}") private val authenticatedLimit: Int,
+    @Value("\${rate.limit.period.seconds:" + DefaultValues.DEFAULT_RATE_LIMIT_PERIOD_SECONDS + "}") private val periodSeconds: Long
 ) : OncePerRequestFilter() {
 
     override fun doFilterInternal(
@@ -55,7 +56,7 @@ class RateLimitFilter(
             Pair("ip:${getClientIp(request)}", anonymousLimit)
         }
 
-        if (rateLimitService.isRateLimitExceeded(key, limit, periodSeconds)) {
+        if (rateLimitService.isRateLimitExceeded(key, limit, periodSeconds.toInt())) {
             writeTooManyRequestsResponse(response)
             return
         }
@@ -91,7 +92,7 @@ class RateLimitFilter(
             message
         )
 
-        val apiResponse = ApiResponse.error<Any>(errorDetail)
+        val apiResponse = ApiResponse.error(errorDetail)
         objectMapper.writeValue(response.writer, apiResponse)
     }
 }

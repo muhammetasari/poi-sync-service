@@ -1,5 +1,6 @@
 package com.rovits.poisyncservice.config
 
+import com.rovits.poisyncservice.exception.TokenInvalidException
 import com.rovits.poisyncservice.service.CustomUserDetailsService
 import com.rovits.poisyncservice.service.JwtService
 import jakarta.servlet.FilterChain
@@ -37,20 +38,25 @@ class JwtAuthenticationFilter(
             return
         }
 
-        val email = jwtService.getEmailFromToken(token)
+        val email = try {
+            if (!jwtService.validateToken(token)) {
+                throw TokenInvalidException()
+            }
+            jwtService.getEmailFromToken(token)
+        } catch (ex: Exception) {
+            throw TokenInvalidException(ex)
+        }
 
         if (email != null && SecurityContextHolder.getContext().authentication == null) {
-            if (jwtService.validateToken(token)) {
-                val userDetails = userDetailsService.loadUserByUsername(email)
+            val userDetails = userDetailsService.loadUserByUsername(email)
 
-                val authToken = UsernamePasswordAuthenticationToken(
-                    userDetails,
-                    null,
-                    userDetails.authorities
-                )
-                authToken.details = WebAuthenticationDetailsSource().buildDetails(request)
-                SecurityContextHolder.getContext().authentication = authToken
-            }
+            val authToken = UsernamePasswordAuthenticationToken(
+                userDetails,
+                null,
+                userDetails.authorities
+            )
+            authToken.details = WebAuthenticationDetailsSource().buildDetails(request)
+            SecurityContextHolder.getContext().authentication = authToken
         }
 
         filterChain.doFilter(request, response)

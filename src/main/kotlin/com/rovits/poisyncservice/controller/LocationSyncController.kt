@@ -3,6 +3,10 @@ package com.rovits.poisyncservice.controller
 import com.rovits.poisyncservice.dto.response.ApiResponse
 import com.rovits.poisyncservice.service.LocationSyncService
 import com.rovits.poisyncservice.util.ResponseHelper
+import com.rovits.poisyncservice.sync.JobStatusManager
+import com.rovits.poisyncservice.sync.JobStatus
+import com.rovits.poisyncservice.dto.response.ErrorDetail
+import com.rovits.poisyncservice.exception.ErrorCodes
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.media.Content
@@ -15,6 +19,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import org.slf4j.LoggerFactory
 import org.springframework.http.ResponseEntity
+import org.springframework.web.bind.annotation.GetMapping
+import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
@@ -71,24 +77,67 @@ class LocationSyncController(
         @RequestParam lng: Double,
 
         @Parameter(description = "Radius to scan in meters (must be > 0)", example = "5000.0", required = false)
-        @RequestParam(required = false, defaultValue = "5000.0") radius: Double,
+        @RequestParam(required = false, defaultValue = com.rovits.poisyncservice.constants.DefaultValues.DEFAULT_RADIUS_METERS.toString()) radius: Double,
 
         @Parameter(description = "POI type to filter (e.g., restaurant, gym)", example = "restaurant", required = false)
-        @RequestParam(required = false, defaultValue = "restaurant") type: String
+        @RequestParam(required = false, defaultValue = com.rovits.poisyncservice.constants.DefaultValues.DEFAULT_PLACE_TYPE) type: String
     ): ResponseEntity<ApiResponse<String>> {
         logger.info("Received sync request: lat={}, lng={}, radius={}, type={}", lat, lng, radius, type)
 
         // Synchronous validation before async execution
         syncService.validateRequest(lat, lng, radius)
 
+        val jobId = JobStatusManager.createJob()
+        logger.info("Sync job started: jobId={}, lat={}, lng={}, radius={}, type={}", jobId, lat, lng, radius, type)
         controllerScope.launch {
             try {
                 syncService.syncPois(lat, lng, radius, type)
+                logger.info("Sync job completed: jobId={}", jobId)
+                JobStatusManager.setJobStatus(jobId, JobStatus.COMPLETED)
             } catch (e: Exception) {
-                logger.error("Sync failed", e)
+                logger.error("Sync job failed: jobId={}, error={}", jobId, e.message, e)
+                JobStatusManager.setJobStatus(jobId, JobStatus.FAILED, e.message)
             }
         }
 
-        return ResponseHelper.accepted("Synchronization started")
+        return ResponseHelper.accepted(jobId)
+    }
+
+    @Operation(
+        summary = "Get Sync Job Status",
+        description = "Returns the current status of a background location sync job by jobId."
+    )
+    @ApiResponses(
+        value = [
+            SwaggerApiResponse(
+                responseCode = "200",
+                description = "Job status returned",
+                content = [Content(mediaType = "application/json", schema = Schema(implementation = ApiResponse::class))]
+            ),
+            SwaggerApiResponse(
+                responseCode = "404",
+                description = "Job not found",
+                content = [Content(schema = Schema(implementation = ApiResponse::class))]
+            )
+        ]
+    )
+    @GetMapping("/status/{jobId}")
+    fun getJobStatus(
+        @PathVariable jobId: String
+    ): ResponseEntity<ApiResponse<Any>> {
+        val (status, error) = JobStatusManager.getJobStatus(jobId)
+        return if (status != null) {
+            val result = mutableMapOf<String, Any?>("status" to status.name)
+            if (status == JobStatus.FAILED && error != null) {
+                result["error"] = error
+            }
+            ResponseHelper.ok(result)
+        } else {
+            val errorDetail = ErrorDetail.of(
+                code = ErrorCodes.POI_NOT_FOUND,
+                message = "Job not found"
+            )
+            ResponseHelper.errorAny(errorDetail, org.springframework.http.HttpStatus.NOT_FOUND)
+        }
     }
 }

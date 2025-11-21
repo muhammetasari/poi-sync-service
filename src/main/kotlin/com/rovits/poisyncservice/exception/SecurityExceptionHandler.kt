@@ -37,7 +37,7 @@ class SecurityExceptionHandler(
         response: HttpServletResponse,
         accessDeniedException: AccessDeniedException
     ) {
-        val message = messageResolver.resolve(MessageKeys.ACCESS_DENIED, "Unknown")
+        val message = messageResolver.resolve(MessageKeys.ACCESS_DENIED, accessDeniedException.message ?: "ACCESS_DENIED")
         val errorDetail = ErrorDetail.of(ErrorCodes.ACCESS_DENIED, message)
         writeResponse(response, HttpServletResponse.SC_FORBIDDEN, errorDetail)
     }
@@ -47,7 +47,7 @@ class SecurityExceptionHandler(
         response.contentType = MediaType.APPLICATION_JSON_VALUE
         response.characterEncoding = "UTF-8"
 
-        val apiResponse = ApiResponse.error<Any>(errorDetail)
+        val apiResponse = ApiResponse.error(errorDetail)
         objectMapper.writeValue(response.writer, apiResponse)
     }
 }

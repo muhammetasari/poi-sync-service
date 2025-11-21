@@ -36,6 +36,17 @@ object ErrorCodes {
     const val JWT_GENERATION_FAILED = "AUTH_006"
     const val MISSING_AUTHENTICATION = "AUTH_007"
 
+
+
+    // ===================================
+    // RATE LIMITING
+    // ===================================
+    const val RATE_LIMIT_EXCEEDED = "AUTH_008"
+    const val AUTH_EMAIL_NOT_VERIFIED = "AUTH_009"
+    const val AUTH_PROVIDER_MISMATCH = "AUTH_010"
+    const val VALIDATION_INVALID_TOKEN = "AUTH_011"
+    const val EMAIL_ALREADY_VERIFIED = "AUTH_012"
+
     // ===================================
     // VALIDATION (VAL_xxx)
     // ===================================
@@ -47,6 +58,8 @@ object ErrorCodes {
     const val INVALID_LONGITUDE = "VAL_006"
     const val INVALID_RADIUS = "VAL_007"
     const val INVALID_DATE_RANGE = "VAL_008"
+    const val PASSWORD_POLICY = "VAL_013"
+    const val VALIDATION_PROVIDER = "VAL_012"
 
     // ===================================
     // EXTERNAL SERVICES (EXT_xxx)
@@ -90,5 +103,4 @@ object ErrorCodes {
     const val SERVICE_UNAVAILABLE = "SYS_002"
     const val CONFIGURATION_ERROR = "SYS_003"
     const val UNKNOWN_ERROR = "SYS_999"
-    const val RATE_LIMIT_EXCEEDED = "SYS_005"
 }

@@ -1,5 +1,6 @@
 package com.rovits.poisyncservice.domain.dto
 
+import com.rovits.poisyncservice.util.MessageKeys
 import io.swagger.v3.oas.annotations.media.Schema
 import jakarta.validation.constraints.*
 
@@ -10,12 +11,12 @@ import jakarta.validation.constraints.*
  */
 @Schema(description = "User login request payload")
 data class LoginRequest(
-    @field:NotBlank(message = "error.validation.required")
-    @field:Email(message = "error.validation.email")
+    @field:NotBlank(message = MessageKeys.VALIDATION_REQUIRED)
+    @field:Email(message = MessageKeys.VALIDATION_EMAIL)
     @field:Schema(description = "User's email address", example = "user@example.com", requiredMode = Schema.RequiredMode.REQUIRED)
     val email: String,
 
-    @field:NotBlank(message = "error.validation.required")
+    @field:NotBlank(message = MessageKeys.VALIDATION_REQUIRED)
     @field:Schema(description = "User's password", example = "P@ssw0rd123", requiredMode = Schema.RequiredMode.REQUIRED)
     val password: String
 )
@@ -25,14 +26,14 @@ data class LoginRequest(
  */
 @Schema(description = "Social login request using Firebase token")
 data class SocialLoginRequest(
-    @field:NotBlank(message = "error.validation.required")
+    @field:NotBlank(message = MessageKeys.VALIDATION_REQUIRED)
     @field:Schema(description = "Firebase ID Token received from client SDK", example = "eyJhbGciOiJSUzI1NiIsImtpZCI6Ijc...", requiredMode = Schema.RequiredMode.REQUIRED)
     val firebaseToken: String,
 
-    @field:NotBlank(message = "error.validation.required")
+    @field:NotBlank(message = MessageKeys.VALIDATION_REQUIRED)
     @field:Pattern(
         regexp = "^(google|facebook|apple)$",
-        message = "error.validation.provider.invalid"
+        message = MessageKeys.VALIDATION_PROVIDER
     )
     @field:Schema(description = "Identity provider", example = "google", allowableValues = ["google", "facebook", "apple"], requiredMode = Schema.RequiredMode.REQUIRED)
     val provider: String
@@ -43,21 +44,21 @@ data class SocialLoginRequest(
  */
 @Schema(description = "New user registration request")
 data class RegisterRequest(
-    @field:NotBlank(message = "error.validation.required")
-    @field:Size(min = 2, max = 100, message = "error.validation.name.size")
+    @field:NotBlank(message = MessageKeys.VALIDATION_REQUIRED)
+    @field:Size(min = 2, max = 100, message = MessageKeys.VALIDATION_NAME_SIZE)
     @field:Schema(description = "Full name of the user", example = "John Doe", requiredMode = Schema.RequiredMode.REQUIRED)
     val name: String,
 
-    @field:NotBlank(message = "error.validation.required")
-    @field:Email(message = "error.validation.email")
+    @field:NotBlank(message = MessageKeys.VALIDATION_REQUIRED)
+    @field:Email(message = MessageKeys.VALIDATION_EMAIL)
     @field:Schema(description = "Valid email address", example = "john.doe@example.com", requiredMode = Schema.RequiredMode.REQUIRED)
     val email: String,
 
-    @field:NotBlank(message = "error.validation.required")
-    @field:Size(min = 8, message = "error.validation.password.min")
+    @field:NotBlank(message = MessageKeys.VALIDATION_REQUIRED)
+    @field:Size(min = 8, message = MessageKeys.VALIDATION_PASSWORD_MIN)
     @field:Pattern(
         regexp = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d).*$",
-        message = "error.validation.password.strength"
+        message = MessageKeys.VALIDATION_PASSWORD_STRENGTH
     )
     @field:Schema(description = "Strong password (min 8 chars, 1 upper, 1 lower, 1 digit)", example = "StrongP@ss1", requiredMode = Schema.RequiredMode.REQUIRED)
     val password: String

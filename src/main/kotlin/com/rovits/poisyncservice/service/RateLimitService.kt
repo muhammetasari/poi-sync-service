@@ -1,49 +1,77 @@
 package com.rovits.poisyncservice.service
 
-import org.slf4j.LoggerFactory
-import org.springframework.data.redis.core.StringRedisTemplate
-import org.springframework.data.redis.core.script.DefaultRedisScript
 import org.springframework.stereotype.Service
-import java.util.Collections
+import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.TimeUnit
 
 @Service
-class RateLimitService(
-    private val redisTemplate: StringRedisTemplate
-) {
-    private val logger = LoggerFactory.getLogger(RateLimitService::class.java)
+class RateLimitService {
+    private val attempts = ConcurrentHashMap<String, Attempt>()
+    private val ipAttempts = ConcurrentHashMap<String, Attempt>()
+    private val maxAttempts = 5
+    private val maxIpAttempts = 20
+    private val blockDurationMillis = TimeUnit.MINUTES.toMillis(10)
 
-    // Lua Script: Anahtarı 1 artır. Eğer yeni değer 1 ise (yani anahtar yeni oluştuysa), süresini ayarla.
-    private val script = DefaultRedisScript<Long>(
-        "local current = redis.call('INCR', KEYS[1]) " +
-                "if current == 1 then " +
-                "   redis.call('EXPIRE', KEYS[1], ARGV[1]) " +
-                "end " +
-                "return current",
-        Long::class.java
-    )
-
-    /**
-     * İsteğin limite takılıp takılmadığını kontrol eder.
-     * @param key Benzersiz anahtar (örn: IP adresi veya User ID)
-     * @param limit İzin verilen maksimum istek sayısı
-     * @param periodInSeconds Zaman penceresi (saniye cinsinden)
-     * @return Eğer limit aşıldıysa true, aşılmadıysa false döner.
-     */
-    fun isRateLimitExceeded(key: String, limit: Int, periodInSeconds: Long): Boolean {
-        val redisKey = "rate_limit:$key"
-
-        try {
-            val count = redisTemplate.execute(
-                script,
-                Collections.singletonList(redisKey),
-                periodInSeconds.toString()
-            )
-
-            return (count ?: 0L) > limit
-        } catch (e: Exception) {
-            logger.error("Rate limit check failed for key: $key", e)
-            // Redis hatası durumunda trafiği kesmemek için false dönüyoruz (Fail-Open)
-            return false
+    fun checkAndIncrease(key: String, ip: String? = null) {
+        val now = System.currentTimeMillis()
+        // Kullanıcı bazlı kontrol
+        val attempt = attempts.compute(key) { _, old ->
+            val prev = old ?: Attempt(0, now, 0)
+            if (prev.blockedUntil > now) {
+                prev.copy()
+            } else if (prev.lastAttempt + blockDurationMillis < now) {
+                Attempt(1, now, 0)
+            } else {
+                val newCount = prev.count + 1
+                if (newCount > maxAttempts) {
+                    Attempt(newCount, now, now + blockDurationMillis)
+                } else {
+                    Attempt(newCount, now, 0)
+                }
+            }
+        }!!
+        if (attempt.blockedUntil > now) {
+            throw RateLimitException("Too many attempts for user. Try again later.")
+        }
+        // IP bazlı kontrol
+        if (ip != null) {
+            val ipAttempt = ipAttempts.compute(ip) { _, old ->
+                val prev = old ?: Attempt(0, now, 0)
+                if (prev.blockedUntil > now) {
+                    prev.copy()
+                } else if (prev.lastAttempt + blockDurationMillis < now) {
+                    Attempt(1, now, 0)
+                } else {
+                    val newCount = prev.count + 1
+                    if (newCount > maxIpAttempts) {
+                        Attempt(newCount, now, now + blockDurationMillis)
+                    } else {
+                        Attempt(newCount, now, 0)
+                    }
+                }
+            }!!
+            if (ipAttempt.blockedUntil > now) {
+                throw RateLimitException("Too many attempts from IP. Try again later.")
+            }
         }
     }
+
+    fun isRateLimitExceeded(key: String, limit: Int, periodSeconds: Int): Boolean {
+        val now = System.currentTimeMillis()
+        val periodMillis = periodSeconds * 1000L
+        val attempt = attempts[key]
+        return if (attempt == null) {
+            false
+        } else {
+            if (attempt.lastAttempt + periodMillis < now) {
+                false
+            } else {
+                attempt.count >= limit
+            }
+        }
+    }
+
+    data class Attempt(val count: Int, val lastAttempt: Long, val blockedUntil: Long)
 }
+
+class RateLimitException(message: String) : RuntimeException(message)

@@ -17,6 +17,11 @@ object MessageKeys {
     const val TOKEN_EXPIRED = "error.token.expired"
     const val FIREBASE_TOKEN_INVALID = "error.firebase.token.invalid"
     const val MISSING_AUTHENTICATION = "error.missing.authentication"
+    const val JWT_GENERATION_FAILED = "error.jwt.generation.failed"
+    const val AUTH_EMAIL_NOT_VERIFIED = "error.auth.email.not.verified"
+    const val AUTH_PROVIDER_MISMATCH = "error.auth.provider.mismatch"
+    const val VALIDATION_INVALID_TOKEN = "error.validation.invalid.token"
+
 
     // ===================================
     // VALIDATION
@@ -31,6 +36,7 @@ object MessageKeys {
     const val VALIDATION_PASSWORD_STRENGTH = "error.validation.password.strength"
     const val VALIDATION_PASSWORD_MIN = "error.validation.password.min"
     const val VALIDATION_NAME_SIZE = "error.validation.name.size"
+    const val PASSWORD_POLICY = "error.validation.password.policy"
 
     // ===================================
     // EXTERNAL & SYSTEM
@@ -43,6 +49,7 @@ object MessageKeys {
     const val CACHE_OPERATION_FAILED = "error.cache.operation.failed"
     const val INTERNAL_SERVER_ERROR = "error.internal.server"
     const val TOO_MANY_REQUESTS = "error.too.many.requests"
+    const val RATE_LIMIT_EXCEEDED = "error.rate.limit.exceeded"
 
     // ===================================
     // POI
