@@ -94,13 +94,8 @@ class LocationSyncService(
                             }
                         )
 
-                        val existing = poiRepository.findByPlaceId(details.id)
-
-                        if (existing.isPresent) {
-                            poiRepository.save(newDoc.copy(placeId = existing.get().placeId))
-                        } else {
-                            poiRepository.save(newDoc)
-                        }
+                        // Simply save - MongoDB will handle upsert based on placeId being the @Id
+                        poiRepository.save(newDoc)
                         savedCount++
                     } catch (e: Exception) {
                         logger.error("Failed to save POI to DB: {}", details.id, e)

@@ -60,16 +60,19 @@ class RateLimitService {
     fun isRateLimitExceeded(key: String, limit: Int, periodSeconds: Int): Boolean {
         val now = System.currentTimeMillis()
         val periodMillis = periodSeconds * 1000L
-        val attempt = attempts[key]
-        return if (attempt == null) {
-            false
-        } else {
-            if (attempt.lastAttempt + periodMillis < now) {
-                false
+
+        val attempt = attempts.compute(key) { _, old ->
+            val prev = old ?: Attempt(0, now, 0)
+            if (prev.lastAttempt + periodMillis < now) {
+                // Period expired, reset counter
+                Attempt(1, now, 0)
             } else {
-                attempt.count >= limit
+                // Increment counter within period
+                Attempt(prev.count + 1, now, 0)
             }
-        }
+        }!!
+
+        return attempt.count > limit
     }
 
     data class Attempt(val count: Int, val lastAttempt: Long, val blockedUntil: Long)

@@ -1,11 +1,50 @@
 # 📋 CHANGELOG - Proje Değişiklik Geçmişi
 
-**Tarih:** 22 Kasım 2025  
-**Versiyon:** 1.1.0
+---
+
+## 🔴 Versiyon 1.2.0 - Logic Fixes (22 Kasım 2025)
+
+### 🎯 Özet
+Bu sürümde **kritik mantık hataları** tespit edilip düzeltildi. Rate limiting, memory leak, cache collision ve MongoDB upsert sorunları çözüldü.
+
+### 🐛 Düzeltilen Kritik Hatalar
+
+#### 1. Rate Limiting - Counter Artırım Hatası ⚠️ KRİTİK
+**Dosya:** `RateLimitService.kt`  
+**Problem:** Rate limiting counter'ı hiç artmıyordu, sistem tamamen işlevsizdi.  
+**Çözüm:** `isRateLimitExceeded()` metodunda `ConcurrentHashMap.compute()` ile atomic counter artırımı eklendi.
+
+#### 2. MongoDB Kayıt Mantığı - Gereksiz Sorgu
+**Dosya:** `LocationSyncService.kt`  
+**Problem:** `findByPlaceId()` + `copy(placeId)` gereksiz işlem yapıyordu.  
+**Çözüm:** MongoDB'nin native upsert mekanizması kullanılmaya başlandı.
+
+#### 3. Job Status Manager - Memory Leak
+**Dosya:** `JobStatusManager.kt`  
+**Problem:** Tamamlanan job'lar bellekten hiç silinmiyordu.  
+**Çözüm:** 1 saatlik otomatik cleanup mekanizması eklendi.
+
+#### 4. Cache Key Collision - Koordinat Yuvarlaması
+**Dosya:** `PoiService.kt`  
+**Problem:** 4 decimal (~11m) hassasiyet cache collision'a neden oluyordu.  
+**Çözüm:** Hassasiyet 6 decimal'e (~0.11m) çıkarıldı.
+
+### 🧪 Test Coverage
+- ✅ `RateLimitServiceTest.kt` - 8 test case
+- ✅ `JobStatusManagerTest.kt` - 9 test case
+- ✅ `PoiServiceCacheKeyTest.kt` - 8 test case
+
+### 📚 Dokümantasyon
+- ✅ `LOGIC_FIXES.md` - Detaylı analiz ve çözüm dokümantasyonu
+
+### 🔗 Referans
+Detaylar için: [LOGIC_FIXES.md](./LOGIC_FIXES.md)
 
 ---
 
-## 🎯 Özet
+## 🟢 Versiyon 1.1.0 - i18n İyileştirmeleri (22 Kasım 2025)
+
+### 🎯 Özet
 
 Bu sürümde **MessageKeys i18n iyileştirmeleri** ve **dokümantasyon güncellemeleri** gerçekleştirildi.
 

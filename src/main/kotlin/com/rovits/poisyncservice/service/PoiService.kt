@@ -151,7 +151,7 @@ class PoiService(
     }
 
     private fun round(value: Double): Double {
-        return value.toBigDecimal().setScale(4, RoundingMode.HALF_UP).toDouble()
+        return value.toBigDecimal().setScale(6, RoundingMode.HALF_UP).toDouble()
     }
 
     // ================= MAPPERS =================
