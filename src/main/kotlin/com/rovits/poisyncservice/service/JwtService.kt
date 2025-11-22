@@ -32,6 +32,8 @@ class JwtService(
             Jwts.builder()
                 .subject(user.email)
                 .claim(SecurityConstants.JWT_CLAIM_USER_ID, user.id)
+                .claim("role", user.role)
+                .claim("firebaseUid", user.firebaseUid)
                 .issuedAt(Date.from(now))
                 .expiration(Date.from(expiryDate))
                 .signWith(key)
@@ -52,6 +54,7 @@ class JwtService(
 
             Jwts.builder()
                 .subject(user.email)
+                .claim("role", user.role)
                 .issuedAt(Date.from(now))
                 .expiration(Date.from(expiryDate))
                 .signWith(key)
@@ -74,6 +77,14 @@ class JwtService(
                 messageKey = MessageKeys.TOKEN_EXPIRED,
                 cause = e
             )
+        } catch (e: Exception) {
+            null
+        }
+    }
+
+    fun getRoleFromToken(token: String): String? {
+        return try {
+            getClaims(token)["role"] as? String
         } catch (e: Exception) {
             null
         }

@@ -1,11 +1,7 @@
 package com.rovits.poisyncservice.controller
 
 import com.rovits.poisyncservice.constants.HttpConstants
-import com.rovits.poisyncservice.domain.dto.AuthResponse
-import com.rovits.poisyncservice.domain.dto.LoginRequest
-import com.rovits.poisyncservice.domain.dto.LogoutRequest
-import com.rovits.poisyncservice.domain.dto.RegisterRequest
-import com.rovits.poisyncservice.domain.dto.SocialLoginRequest
+import com.rovits.poisyncservice.domain.dto.*
 import com.rovits.poisyncservice.dto.response.ApiResponse
 import com.rovits.poisyncservice.service.AuthService
 import com.rovits.poisyncservice.util.ResponseHelper
@@ -19,6 +15,7 @@ import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.validation.Valid
 import org.slf4j.LoggerFactory
 import org.springframework.http.ResponseEntity
+import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.*
 
 @RestController
@@ -29,7 +26,43 @@ class AuthController(
 ) {
     private val logger = LoggerFactory.getLogger(AuthController::class.java)
 
-    @Operation(summary = "Social Login", description = "Authenticates user using a Firebase ID token. Supports Google, Facebook, and Apple providers.")
+    @Operation(
+        summary = "Register User",
+        description = "Registers a new user using Firebase ID token. Client must create user in Firebase first, then send the token to backend."
+    )
+    @ApiResponses(
+        value = [
+            SwaggerApiResponse(
+                responseCode = "200",
+                description = "Registration successful, returns JWT access/refresh tokens",
+                content = [Content(schema = Schema(implementation = AuthResponse::class))]
+            ),
+            SwaggerApiResponse(
+                responseCode = "400",
+                description = "Validation error or invalid Firebase token",
+                content = [Content(schema = Schema(implementation = ApiResponse::class))]
+            ),
+            SwaggerApiResponse(
+                responseCode = "409",
+                description = "User already exists",
+                content = [Content(schema = Schema(implementation = ApiResponse::class))]
+            )
+        ]
+    )
+    @PostMapping("/register")
+    fun register(
+        @Valid @RequestBody request: RegisterRequest
+    ): ResponseEntity<ApiResponse<AuthResponse>> {
+        logger.info("Registration request received")
+        val authResponse = authService.register(request)
+        logger.info("Registration successful: email={}", authResponse.user.email)
+        return ResponseHelper.ok(authResponse)
+    }
+
+    @Operation(
+        summary = "Login User",
+        description = "Authenticates user using Firebase ID token. Works for both email/password and social login (Google, Facebook, Apple). Client must authenticate with Firebase first, then send the ID token."
+    )
     @ApiResponses(
         value = [
             SwaggerApiResponse(
@@ -39,72 +72,12 @@ class AuthController(
             ),
             SwaggerApiResponse(
                 responseCode = "400",
-                description = "Invalid provider or validation error",
-                content = [Content(schema = Schema(implementation = ApiResponse::class))]
-            ),
-            SwaggerApiResponse(
-                responseCode = "401",
-                description = "Invalid Firebase Token",
-                content = [Content(schema = Schema(implementation = ApiResponse::class))]
-            )
-        ]
-    )
-    @PostMapping("/social-login")
-    fun socialLogin(
-        @Valid @RequestBody request: SocialLoginRequest
-    ): ResponseEntity<ApiResponse<AuthResponse>> {
-        logger.info("Social login request: provider={}", request.provider)
-        val authResponse = authService.socialLogin(request)
-        logger.info("Social login successful: email={}", authResponse.user.email)
-        return ResponseHelper.ok(authResponse)
-    }
-
-    @Operation(summary = "Register User", description = "Creates a new user account with email and password.")
-    @ApiResponses(
-        value = [
-            SwaggerApiResponse(
-                responseCode = "200",
-                description = "Registration successful",
-                content = [Content(schema = Schema(implementation = AuthResponse::class))]
-            ),
-            SwaggerApiResponse(
-                responseCode = "400",
-                description = "Validation error (e.g., weak password, invalid email)",
-                content = [Content(schema = Schema(implementation = ApiResponse::class))]
-            ),
-            SwaggerApiResponse(
-                responseCode = "409",
-                description = "User with this email already exists",
-                content = [Content(schema = Schema(implementation = ApiResponse::class))]
-            )
-        ]
-    )
-    @PostMapping("/register")
-    fun register(
-        @Valid @RequestBody request: RegisterRequest
-    ): ResponseEntity<ApiResponse<AuthResponse>> {
-        logger.info("Registration request: email={}", request.email)
-        val authResponse = authService.register(request)
-        logger.info("Registration successful: email={}", authResponse.user.email)
-        return ResponseHelper.ok(authResponse)
-    }
-
-    @Operation(summary = "Login User", description = "Authenticates a user with email and password.")
-    @ApiResponses(
-        value = [
-            SwaggerApiResponse(
-                responseCode = "200",
-                description = "Login successful",
-                content = [Content(schema = Schema(implementation = AuthResponse::class))]
-            ),
-            SwaggerApiResponse(
-                responseCode = "400",
                 description = "Validation error",
                 content = [Content(schema = Schema(implementation = ApiResponse::class))]
             ),
             SwaggerApiResponse(
                 responseCode = "401",
-                description = "Invalid credentials",
+                description = "Invalid Firebase token or email not verified",
                 content = [Content(schema = Schema(implementation = ApiResponse::class))]
             )
         ]
@@ -113,10 +86,101 @@ class AuthController(
     fun login(
         @Valid @RequestBody request: LoginRequest
     ): ResponseEntity<ApiResponse<AuthResponse>> {
-        logger.info("Login request: email={}", request.email)
+        logger.info("Login request received")
         val authResponse = authService.login(request)
         logger.info("Login successful: email={}", authResponse.user.email)
         return ResponseHelper.ok(authResponse)
+    }
+
+    @Operation(
+        summary = "Send Password Reset Email",
+        description = "Sends a password reset email to the specified address via Firebase."
+    )
+    @ApiResponses(
+        value = [
+            SwaggerApiResponse(
+                responseCode = "200",
+                description = "Password reset email sent successfully",
+                content = [Content(schema = Schema(implementation = ApiResponse::class))]
+            ),
+            SwaggerApiResponse(
+                responseCode = "400",
+                description = "Invalid email format",
+                content = [Content(schema = Schema(implementation = ApiResponse::class))]
+            )
+        ]
+    )
+    @PostMapping("/send-password-reset-email")
+    fun sendPasswordResetEmail(
+        @Valid @RequestBody request: SendPasswordResetRequest
+    ): ResponseEntity<ApiResponse<Unit>> {
+        logger.info("Password reset email request: email={}", request.email)
+        authService.sendPasswordResetEmail(request)
+        logger.info("Password reset email sent: email={}", request.email)
+        return ResponseHelper.ok()
+    }
+
+    @Operation(
+        summary = "Send Email Verification",
+        description = "Sends an email verification link to the user's email address via Firebase."
+    )
+    @ApiResponses(
+        value = [
+            SwaggerApiResponse(
+                responseCode = "200",
+                description = "Verification email sent successfully",
+                content = [Content(schema = Schema(implementation = ApiResponse::class))]
+            ),
+            SwaggerApiResponse(
+                responseCode = "401",
+                description = "Invalid Firebase token",
+                content = [Content(schema = Schema(implementation = ApiResponse::class))]
+            )
+        ]
+    )
+    @PostMapping("/send-email-verification")
+    fun sendEmailVerification(
+        @Valid @RequestBody request: SendEmailVerificationRequest
+    ): ResponseEntity<ApiResponse<Unit>> {
+        logger.info("Email verification request received")
+        authService.sendEmailVerification(request)
+        logger.info("Email verification sent successfully")
+        return ResponseHelper.ok()
+    }
+
+    @Operation(
+        summary = "Update User Role",
+        description = "Updates a user's role. Admin only endpoint."
+    )
+    @ApiResponses(
+        value = [
+            SwaggerApiResponse(
+                responseCode = "200",
+                description = "User role updated successfully",
+                content = [Content(schema = Schema(implementation = ApiResponse::class))]
+            ),
+            SwaggerApiResponse(
+                responseCode = "403",
+                description = "Access denied - admin role required",
+                content = [Content(schema = Schema(implementation = ApiResponse::class))]
+            ),
+            SwaggerApiResponse(
+                responseCode = "404",
+                description = "User not found",
+                content = [Content(schema = Schema(implementation = ApiResponse::class))]
+            )
+        ]
+    )
+    @PutMapping("/users/{userId}/role")
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
+    fun updateUserRole(
+        @PathVariable userId: String,
+        @Valid @RequestBody request: UpdateUserRoleRequest
+    ): ResponseEntity<ApiResponse<Unit>> {
+        logger.info("Update user role request: userId={}, newRole={}", userId, request.role)
+        authService.updateUserRole(userId, request)
+        logger.info("User role updated successfully: userId={}", userId)
+        return ResponseHelper.ok()
     }
 
     @Operation(

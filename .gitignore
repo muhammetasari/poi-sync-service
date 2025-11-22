@@ -1,19 +1,40 @@
-HELP.md
-!gradle/wrapper/gradle-wrapper.jar
-!**/src/main/**/build/
-!**/src/test/**/build/
-Thumbs.db
+# ===================================================================
+# Gizli Bilgiler & Ortam Değişkenleri
+# ===================================================================
+# Bu dosyalar hassas bilgiler içerir ve kesinlikle commit edilmemelidir.
+.env
+local.properties
+src/main/resources/serviceAccountKey.json
 
+# ===================================================================
+# Build Dosyaları & Bağımlılıklar
+# ===================================================================
 # Gradle
 .gradle/
 build/
 gradle-app.setting
+
+# Java/Kotlin derlenmiş dosyaları
+*.class
+*.jar
+*.war
+*.log
+
+# Gradle Wrapper'ı istisna olarak tut
+!gradle/wrapper/gradle-wrapper.jar
 !gradle-wrapper.jar
 
-# Environment variables (GİZLİ BİLGİLER)
-.env
+# ===================================================================
+# IDE & Editör Dosyaları
+# ===================================================================
+# IntelliJ IDEA
+.idea/
+*.iws
+*.iml
+*.ipr
+out/
 
-### STS ###
+# STS / Eclipse
 .apt_generated
 .classpath
 .factorypath
@@ -22,37 +43,29 @@ gradle-app.setting
 .springBeans
 .sts4-cache
 bin/
-!**/src/main/**/bin/
-!**/src/test/**/bin/
-src/main/resources/serviceAccountKey.json
 
-### IntelliJ IDEA ###
-.idea
-*.iws
-*.iml
-*.ipr
-.idea/
-out/
-!**/src/main/**/out/
-!**/src/test/**/out/
+# VS Code
+.vscode/
 
-### NetBeans ###
+# NetBeans
 /nbproject/private/
 /nbbuild/
 /dist/
 /nbdist/
 /.nb-gradle/
 
-### VS Code ###
-.vscode/
+# Kotlin
+.kotlin/
 
-### Kotlin ###
-.kotlin
+# ===================================================================
+# İşletim Sistemi Dosyaları
+# ===================================================================
+# Windows
+Thumbs.db
 
-# Java
-*.class
-*.jar
-*.war
-*.log
-
-local.properties
+# ===================================================================
+# Projeye Özel İstisnalar
+# ===================================================================
+# Konsol uygulamasını ve diğer dosyaları yoksay
+/firebase-auth-console/
+HELP.md

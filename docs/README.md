@@ -23,7 +23,7 @@ POI (Point of Interest) senkronizasyon servisi, Google Places API ile entegre ç
 
 - ✅ RESTful ve reaktif endpoint'ler
 - ✅ JWT tabanlı authentication
-- ✅ Redis ile cache (24s TTL, SSL'li bağlantı)
+ - ✅ Redis ile cache (24 saat TTL, SSL'li bağlantı)
 - ✅ MongoDB ile veri saklama
 - ✅ Google & Firebase entegrasyonları
 - ✅ API key ile erişim yetkilendirme
@@ -82,9 +82,10 @@ docker-compose up --build
 
 | Endpoint                       | HTTP  | Açıklama                          |
 |--------------------------------|-------|-----------------------------------|
-| /api/auth/register             | POST  | Kullanıcı kaydı                   |
-| /api/auth/login                | POST  | Kullanıcı girişi                  |
-| /api/auth/social-login         | POST  | Sosyal login (Google/Firebase)    |
+| /api/auth/register             | POST  | Kullanıcı kaydı (Firebase token)  |
+| /api/auth/login                | POST  | Kullanıcı girişi (Firebase token) |
+| /api/auth/password-reset       | POST  | Şifre sıfırlama email gönderimi   |
+| /api/auth/refresh              | POST  | Token yenileme                    |
 | /api/auth/logout               | POST  | Kullanıcı çıkışı (token blacklist)|
 | /api/sync/locations            | POST  | POI senkronizasyonu başlat (Async)|
 | /api/sync/status/{jobId}       | GET   | Sync job durumu sorgula           |
@@ -93,7 +94,7 @@ docker-compose up --build
 | /api/places/details/{placeId}  | GET   | POI detay sorgusu                 |
 | /actuator/health               | GET   | Healthcheck endpoint'i            |
 
-Daha fazlası için Postman koleksiyonunu, **Swagger UI** (`/swagger-ui.html`) veya docs/ dizinini inceleyin.
+Daha fazlası için Postman koleksiyonunu, **Swagger UI** (`/swagger-ui/index.html`) veya [API dokümantasyonunu](./api/ENDPOINTS.md) inceleyin.
 
 ---
 
@@ -135,7 +136,7 @@ Test coverage ve örnekler için:
 ## 🌍 Çoklu Dil Desteği
 
 - `Accept-Language` header ile **Türkçe** veya **İngilizce** response alabilirsin.
-- Yeni dil ekleme rehberi için [i18n_GUIDE.md](./i18n_GUIDE.md)
+- Yeni dil ekleme rehberi için [i18n_GUIDE.md](./i18n/i18n_GUIDE.md)
 - Error ve validasyon mesajlarında otomatik lokalizasyon aktif.
 
 ---
@@ -148,18 +149,33 @@ Test coverage ve örnekler için:
     - `code`, `message`, `errors`, `timestamp`
 - Hatalar için ayrıntılı kodlar:
     - Kullanıcı, authentication, validasyon, external servis, cache, veritabanı ve sistem hataları ayrıştırılır.
-    - Tüm hata kodları için [ERROR_CODES.md](./ERROR_CODES.md)
-    - Response örnekleri: [API_RESPONSES.md](./API_RESPONSES.md)
+    - Tüm hata kodları için [ERROR_CODES.md](./errors/ERROR_CODES.md)
+    - Response örnekleri: [API_RESPONSES.md](./api/API_RESPONSES.md)
 
 ---
 
-## 📝 Diğer Dokümantasyon Dosyaları
+## 📝 Dokümantasyon
 
-- [ENDPOINTS.md](./ENDPOINTS.md) — Detaylı endpoint referansı ve örnekleri
-- [ERROR_CODES.md](./ERROR_CODES.md) — Hata kodları ve açıklamaları
-- [API_RESPONSES.md](./API_RESPONSES.md) — Yanıt formatı örnekleri
-- [i18n_GUIDE.md](./i18n_GUIDE.md) — Yeni dil ekleme, i18n yapısı
-- Postman koleksiyonu: `postman_collection.json` (proje kök dizininde)
+### API & Endpoint Dokümantasyonu
+- [ENDPOINTS.md](./api/ENDPOINTS.md) — Detaylı endpoint referansı ve örnekleri
+- [ERROR_CODES.md](./errors/ERROR_CODES.md) — Hata kodları ve açıklamaları
+- [API_RESPONSES.md](./api/API_RESPONSES.md) — Yanıt formatı örnekleri
+- [CLIENT_INTEGRATION.md](./api/CLIENT_INTEGRATION.md) — Client-side (iOS/Android/Web) entegrasyon
+
+### Authentication & Firebase
+- [WHY_FIREBASE_AUTH.md](./auth/WHY_FIREBASE_AUTH.md) — Firebase Authentication neden tercih edildi?
+- [FIREBASE_SETUP.md](./firebase/FIREBASE_SETUP.md) — Firebase Console kurulum rehberi
+- [AUTH_MIGRATION_SUMMARY.md](./auth/AUTH_MIGRATION_SUMMARY.md) — Auth sistem migration detayları
+
+### Test & Development
+- [POSTMAN_COLLECTION_GUIDE.md](./postman/POSTMAN_COLLECTION_GUIDE.md) — Postman collection kullanım rehberi
+- [POSTMAN_UPDATE_SUMMARY.md](./postman/POSTMAN_UPDATE_SUMMARY.md) — Postman collection güncelleme detayları
+- [i18n_GUIDE.md](./i18n/i18n_GUIDE.md) — Yeni dil ekleme, i18n yapısı
+- [CHANGELOG.md](./changelog/CHANGELOG.md) — Versiyon değişiklikleri ve geçmiş
+- [IMPLEMENTATION_COMPLETE.md](./general/IMPLEMENTATION_COMPLETE.md) — Proje tamamlanma durumu
+
+### Postman Koleksiyonu
+- `postman_collection.json` (proje kök dizininde)
 
 ---
 
@@ -175,3 +191,4 @@ Katkı rehberi yakında eklenecek.
 [Lisans veya iletişim bilgilerini buraya ekle]
 
 ---
+

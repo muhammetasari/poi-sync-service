@@ -25,8 +25,24 @@ class CustomUserDetailsService(
                 )
             }
 
-        val authorities = user.roles.map { SimpleGrantedAuthority(it.name) }
+        // Convert role string to Spring Security authority
+        val authority = SimpleGrantedAuthority("ROLE_${user.role.uppercase()}")
 
-        return User(user.email, user.password ?: "", authorities)
+        return User(user.email, "", listOf(authority))
+    }
+
+    fun loadUserByFirebaseUid(firebaseUid: String): UserDetails {
+        val user = userRepository.findByFirebaseUid(firebaseUid)
+            .orElseThrow {
+                ResourceNotFoundException(
+                    ErrorCodes.USER_NOT_FOUND,
+                    MessageKeys.USER_NOT_FOUND,
+                    arrayOf(firebaseUid)
+                )
+            }
+
+        val authority = SimpleGrantedAuthority("ROLE_${user.role.uppercase()}")
+
+        return User(user.email, "", listOf(authority))
     }
 }

@@ -7,61 +7,80 @@ import jakarta.validation.constraints.*
 // ===== REQUEST MODELS =====
 
 /**
- * Login request with email/password validation
+ * Login request with Firebase ID token
+ * Works for both email/password and social login (Google, Facebook, Apple)
  */
-@Schema(description = "User login request payload")
+@Schema(description = "User login request using Firebase ID token")
 data class LoginRequest(
     @field:NotBlank(message = MessageKeys.VALIDATION_REQUIRED)
-    @field:Email(message = MessageKeys.VALIDATION_EMAIL)
-    @field:Schema(description = "User's email address", example = "user@example.com", requiredMode = Schema.RequiredMode.REQUIRED)
-    val email: String,
-
-    @field:NotBlank(message = MessageKeys.VALIDATION_REQUIRED)
-    @field:Schema(description = "User's password", example = "P@ssw0rd123", requiredMode = Schema.RequiredMode.REQUIRED)
-    val password: String
-)
-
-/**
- * Social login request (Firebase token)
- */
-@Schema(description = "Social login request using Firebase token")
-data class SocialLoginRequest(
-    @field:NotBlank(message = MessageKeys.VALIDATION_REQUIRED)
-    @field:Schema(description = "Firebase ID Token received from client SDK", example = "eyJhbGciOiJSUzI1NiIsImtpZCI6Ijc...", requiredMode = Schema.RequiredMode.REQUIRED)
-    val firebaseToken: String,
-
-    @field:NotBlank(message = MessageKeys.VALIDATION_REQUIRED)
-    @field:Pattern(
-        regexp = "^(google|facebook|apple)$",
-        message = MessageKeys.VALIDATION_PROVIDER
+    @field:Schema(
+        description = "Firebase ID Token received from client SDK after authentication",
+        example = "eyJhbGciOiJSUzI1NiIsImtpZCI6Ijc...",
+        requiredMode = Schema.RequiredMode.REQUIRED
     )
-    @field:Schema(description = "Identity provider", example = "google", allowableValues = ["google", "facebook", "apple"], requiredMode = Schema.RequiredMode.REQUIRED)
-    val provider: String
+    val firebaseToken: String
 )
 
 /**
- * Registration request with comprehensive validation
+ * Registration request with Firebase ID token
  */
-@Schema(description = "New user registration request")
+@Schema(description = "New user registration request using Firebase ID token")
 data class RegisterRequest(
     @field:NotBlank(message = MessageKeys.VALIDATION_REQUIRED)
-    @field:Size(min = 2, max = 100, message = MessageKeys.VALIDATION_NAME_SIZE)
-    @field:Schema(description = "Full name of the user", example = "John Doe", requiredMode = Schema.RequiredMode.REQUIRED)
-    val name: String,
+    @field:Schema(
+        description = "Firebase ID Token received from client SDK after user creation",
+        example = "eyJhbGciOiJSUzI1NiIsImtpZCI6Ijc...",
+        requiredMode = Schema.RequiredMode.REQUIRED
+    )
+    val firebaseToken: String
+)
 
+/**
+ * Send password reset email request
+ */
+@Schema(description = "Request to send password reset email")
+data class SendPasswordResetRequest(
     @field:NotBlank(message = MessageKeys.VALIDATION_REQUIRED)
     @field:Email(message = MessageKeys.VALIDATION_EMAIL)
-    @field:Schema(description = "Valid email address", example = "john.doe@example.com", requiredMode = Schema.RequiredMode.REQUIRED)
-    val email: String,
-
-    @field:NotBlank(message = MessageKeys.VALIDATION_REQUIRED)
-    @field:Size(min = 8, message = MessageKeys.VALIDATION_PASSWORD_MIN)
-    @field:Pattern(
-        regexp = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d).*$",
-        message = MessageKeys.VALIDATION_PASSWORD_STRENGTH
+    @field:Schema(
+        description = "Email address to send password reset link",
+        example = "user@example.com",
+        requiredMode = Schema.RequiredMode.REQUIRED
     )
-    @field:Schema(description = "Strong password (min 8 chars, 1 upper, 1 lower, 1 digit)", example = "StrongP@ss1", requiredMode = Schema.RequiredMode.REQUIRED)
-    val password: String
+    val email: String
+)
+
+/**
+ * Send email verification request
+ */
+@Schema(description = "Request to send email verification")
+data class SendEmailVerificationRequest(
+    @field:NotBlank(message = MessageKeys.VALIDATION_REQUIRED)
+    @field:Schema(
+        description = "Firebase ID Token of the user",
+        example = "eyJhbGciOiJSUzI1NiIsImtpZCI6Ijc...",
+        requiredMode = Schema.RequiredMode.REQUIRED
+    )
+    val firebaseToken: String
+)
+
+/**
+ * Update user role request (admin only)
+ */
+@Schema(description = "Request to update user role")
+data class UpdateUserRoleRequest(
+    @field:NotBlank(message = MessageKeys.VALIDATION_REQUIRED)
+    @field:Pattern(
+        regexp = "^(user|admin)$",
+        message = "Role must be either 'user' or 'admin'"
+    )
+    @field:Schema(
+        description = "New role for the user",
+        example = "admin",
+        allowableValues = ["user", "admin"],
+        requiredMode = Schema.RequiredMode.REQUIRED
+    )
+    val role: String
 )
 
 // ===== RESPONSE MODELS =====
@@ -87,7 +106,10 @@ data class UserDto(
     val email: String,
 
     @field:Schema(description = "User full name", example = "John Doe")
-    val name: String?
+    val name: String?,
+
+    @field:Schema(description = "User role", example = "user", allowableValues = ["user", "admin"])
+    val role: String = "user"
 )
 
 @Schema(description = "Logout request payload")

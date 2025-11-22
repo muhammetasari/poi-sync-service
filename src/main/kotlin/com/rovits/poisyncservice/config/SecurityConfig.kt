@@ -1,7 +1,6 @@
 package com.rovits.poisyncservice.config
 
 import com.rovits.poisyncservice.constants.ApiEndpoints
-import com.rovits.poisyncservice.domain.enums.UserRole
 import com.rovits.poisyncservice.exception.SecurityExceptionHandler
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
@@ -10,8 +9,6 @@ import org.springframework.security.config.annotation.authentication.configurati
 import org.springframework.security.config.annotation.web.builders.HttpSecurity
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity
 import org.springframework.security.config.http.SessionCreationPolicy
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
-import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.security.web.SecurityFilterChain
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter
 
@@ -23,11 +20,6 @@ class SecurityConfig(
     private val rateLimitFilter: RateLimitFilter,
     private val securityExceptionHandler: SecurityExceptionHandler
 ) {
-
-    @Bean
-    fun passwordEncoder(): PasswordEncoder {
-        return BCryptPasswordEncoder()
-    }
 
     @Bean
     fun authenticationManager(config: AuthenticationConfiguration): AuthenticationManager {
@@ -52,7 +44,7 @@ class SecurityConfig(
                     ApiEndpoints.PATTERN_SWAGGER_UI,
                     ApiEndpoints.PATTERN_TEST
                 ).permitAll()
-                it.requestMatchers(ApiEndpoints.PATTERN_SYNC).hasAuthority(UserRole.ROLE_ADMIN.name)
+                it.requestMatchers(ApiEndpoints.PATTERN_SYNC).hasAuthority("ROLE_ADMIN")
                 it.anyRequest().authenticated()
             }
             .sessionManagement { it.sessionCreationPolicy(SessionCreationPolicy.STATELESS) }

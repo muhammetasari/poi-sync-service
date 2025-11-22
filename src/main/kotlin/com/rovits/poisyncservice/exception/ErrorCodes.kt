@@ -68,6 +68,7 @@ object ErrorCodes {
     const val GOOGLE_API_UNAVAILABLE = "EXT_002"
     const val GOOGLE_API_RATE_LIMIT = "EXT_003"
     const val FIREBASE_ERROR = "EXT_004"
+    const val FIREBASE_FAILED = "EXT_004"
     const val FIREBASE_UNAVAILABLE = "EXT_005"
     const val EXTERNAL_SERVICE_TIMEOUT = "EXT_006"
 
