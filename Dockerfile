@@ -9,8 +9,6 @@ WORKDIR /app
 COPY gradlew .
 COPY gradle gradle
 COPY build.gradle.kts .
-COPY settings.gradle.kts .
-
 # Dependency'leri indir (cache layer)
 RUN gradle dependencies --no-daemon || true
 
