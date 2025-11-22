@@ -1,4 +1,4 @@
-# 🚦 ERROR_CODES.md
+# ERROR_CODES.md
 
 Bu dokümanda, POI Sync Service içinde kullanılan hata kodları, bunların kısa açıklamaları ve ilişkili i18n mesaj anahtarları listelenmiştir.
 
@@ -6,7 +6,7 @@ Her hata kodu, sistemdeki hata tipini kolay anlaşılır ve takip edilebilir kı
 
 ---
 
-## 🟢 Kullanıcı Hataları (USER_xxx)
+## Kullanıcı Hataları (USER_xxx)
 
 | Kod           | Mesaj Anahtarı             | Açıklama                                    |
 |---------------|----------------------------|----------------------------------------------|
@@ -18,7 +18,7 @@ Her hata kodu, sistemdeki hata tipini kolay anlaşılır ve takip edilebilir kı
 
 ---
 
-## 🟡 Kimlik Doğrulama Hataları (AUTH_xxx)
+## Kimlik Doğrulama Hataları (AUTH_xxx)
 
 | Kod           | Mesaj Anahtarı                  | Açıklama                              |
 |---------------|---------------------------------|----------------------------------------|
@@ -37,7 +37,7 @@ Her hata kodu, sistemdeki hata tipini kolay anlaşılır ve takip edilebilir kı
 
 ---
 
-## 🟠 Validasyon Hataları (VAL_xxx)
+## Validasyon Hataları (VAL_xxx)
 
 | Kod           | Mesaj Anahtarı                        | Açıklama                                      |
 |---------------|---------------------------------------|------------------------------------------------|
@@ -57,7 +57,7 @@ Her hata kodu, sistemdeki hata tipini kolay anlaşılır ve takip edilebilir kı
 
 ---
 
-## 🟣 Harici Servis Hataları (EXT_xxx)
+## Harici Servis Hataları (EXT_xxx)
 
 | Kod           | Mesaj Anahtarı                   | Açıklama                                        |
 |---------------|----------------------------------|--------------------------------------------------|
@@ -70,7 +70,7 @@ Her hata kodu, sistemdeki hata tipini kolay anlaşılır ve takip edilebilir kı
 
 ---
 
-## 🟤 Veritabanı Hataları (DB_xxx)
+## Veritabanı Hataları (DB_xxx)
 
 | Kod           | Mesaj Anahtarı                     | Açıklama                                          |
 |---------------|------------------------------------|----------------------------------------------------|
@@ -82,7 +82,7 @@ Her hata kodu, sistemdeki hata tipini kolay anlaşılır ve takip edilebilir kı
 
 ---
 
-## 🟩 Cache Hataları (CACHE_xxx)
+## Cache Hataları (CACHE_xxx)
 
 | Kod           | Mesaj Anahtarı                         | Açıklama                                           |
 |---------------|----------------------------------------|-----------------------------------------------------|
@@ -93,7 +93,7 @@ Her hata kodu, sistemdeki hata tipini kolay anlaşılır ve takip edilebilir kı
 
 ---
 
-## 🟨 POI Hataları (POI_xxx)
+## POI Hataları (POI_xxx)
 
 | Kod           | Mesaj Anahtarı                         | Açıklama                                      |
 |---------------|----------------------------------------|-----------------------------------------------|
@@ -104,7 +104,7 @@ Her hata kodu, sistemdeki hata tipini kolay anlaşılır ve takip edilebilir kı
 
 ---
 
-## ⬛ Sistem Hataları (SYS_xxx)
+## Sistem Hataları (SYS_xxx)
 
 | Kod           | Mesaj Anahtarı                 | Açıklama                              |
 |---------------|-------------------------------|----------------------------------------|

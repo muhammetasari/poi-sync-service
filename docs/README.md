@@ -1,50 +1,50 @@
-# 🚀 POI Sync Service
+# POI Sync Service
 
 POI (Point of Interest) senkronizasyon servisi, Google Places API ile entegre çalışan, Spring Boot & Kotlin tabanlı modern bir backend uygulamasıdır. Hem reaktif hem klasik web servis akışlarını güvenli, ölçeklenebilir ve çoklu dil destekli olarak sunar.
 
 ---
 
-## 📦 Kullanılan Teknolojiler
+## Kullanılan Teknolojiler
 
-- **Kotlin 1.9.25** & **Java 17** – Modern, tip güvenli programlama ve JVM desteği
-- **Spring Boot 3.5.7** – Gelişmiş backend çatısı
-- **Spring Web / WebFlux** – Hem klasik hem reaktif REST API'ler
-- **Spring Security & JWT (0.12.5)** – Kimlik doğrulama, endpoint koruması
-- **MongoDB (Atlas)** & **Redis (Upstash Cloud)** – NoSQL ve caching
-- **Google Places API, Firebase Admin SDK 9.2.0** – Harici sistem entegrasyonu
-- **SpringDoc OpenAPI 2.8.14** – Swagger UI ile otomatik API dokümantasyonu
-- **Gradle 8.5** – Build management ve bağımlılık yönetimi
-- **Docker & Docker Compose** – Kolay deploy & local setup
-- **Test Stack:** JUnit 5, MockK 1.13.8, Testcontainers 1.19.3, WireMock 3.3.1, Spring Security Test
-
----
-
-## 🏗️ Başlıca Özellikler
-
-- ✅ RESTful ve reaktif endpoint'ler
-- ✅ JWT tabanlı authentication
- - ✅ Redis ile cache (24 saat TTL, SSL'li bağlantı)
-- ✅ MongoDB ile veri saklama
-- ✅ Google & Firebase entegrasyonları
-- ✅ API key ile erişim yetkilendirme
-- ✅ Kapsamlı hata ve validasyon yönetimi (i18n)
-- ✅ Çoklu dil: Türkçe, İngilizce ve kolay eklenebilir diller
-- ✅ Swagger/OpenAPI UI ile interaktif API dokümantasyonu
-- ✅ Health/metrics endpoint'leri (Spring Actuator)
-- ✅ Asenkron POI senkronizasyon işi (Job-based)
-- ✅ Dokümantasyon dosyaları ve hazır Postman koleksiyonu
+- Kotlin 1.9.25 & Java 17
+- Spring Boot 3.5.7
+- Spring Web / WebFlux
+- Spring Security & JWT (0.12.5)
+- MongoDB (Atlas) & Redis (Upstash Cloud)
+- Google Places API, Firebase Admin SDK 9.2.0
+- SpringDoc OpenAPI 2.8.14
+- Gradle 8.5
+- Docker & Docker Compose
+- Test Stack: JUnit 5, MockK 1.13.8, Testcontainers 1.19.3, WireMock 3.3.1, Spring Security Test
 
 ---
 
-## 🛠️ Kurulum & Çalıştırma
+## Temel Özellikler
+
+- RESTful ve reaktif endpoint'ler
+- JWT tabanlı authentication
+- Redis ile cache (24 saat TTL, SSL'li bağlantı)
+- MongoDB ile veri saklama
+- Google & Firebase entegrasyonları
+- API key ile erişim yetkilendirme
+- Kapsamlı hata ve validasyon yönetimi (i18n)
+- Çoklu dil desteği
+- Swagger/OpenAPI UI ile interaktif API dokümantasyonu
+- Health/metrics endpoint'leri (Spring Actuator)
+- Asenkron POI senkronizasyonu (Job-based)
+- Dokümantasyon dosyaları ve hazır Postman koleksiyonu
+
+---
+
+## Kurulum & Çalıştırma
 
 ### Gereksinimler
 - Java 17+
-- Docker (optional)
+- Docker (opsiyonel)
 - MongoDB Atlas & Upstash Redis hesapları
 - Google API Key
 
-### Environment Variables (örn. `.env`)
+### Environment Variables (ör. `.env`)
 ```ini
 SPRING_DATA_REDIS_HOST=...
 SPRING_DATA_REDIS_PORT=6379
@@ -78,7 +78,7 @@ docker-compose up --build
 
 ---
 
-## 📡 Ana API Endpoints
+## Ana API Endpoints
 
 | Endpoint                       | HTTP  | Açıklama                          |
 |--------------------------------|-------|-----------------------------------|
@@ -98,7 +98,7 @@ Daha fazlası için Postman koleksiyonunu, **Swagger UI** (`/swagger-ui/index.ht
 
 ---
 
-## 🏗️ Proje Dizini (Özet)
+## Proje Dizini (Özet)
 
 ```
 src/main/kotlin/com/rovits/poisyncservice/
@@ -113,15 +113,15 @@ src/main/kotlin/com/rovits/poisyncservice/
 
 ---
 
-## 🔒 Güvenlik & Cache
+## Güvenlik & Cache
 
-- **JWT token** ile authentication
-- **API Key** ile request bazlı yetkilendirme (`X-API-Key`)
-- **Redis (Upstash, SSL)** ile 24 saatlik cache mekanizması
+- JWT token ile authentication
+- API Key ile request bazlı yetkilendirme (`X-API-Key`)
+- Redis (Upstash, SSL) ile 24 saatlik cache mekanizması
 
 ---
 
-## 🧪 Test
+## Test
 
 Tüm unit & entegrasyon testlerini çalıştırmak için:
 ```bash
@@ -133,7 +133,7 @@ Test coverage ve örnekler için:
 
 ---
 
-## 🌍 Çoklu Dil Desteği
+## Çoklu Dil Desteği
 
 - `Accept-Language` header ile **Türkçe** veya **İngilizce** response alabilirsin.
 - Yeni dil ekleme rehberi için [i18n_GUIDE.md](./i18n/i18n_GUIDE.md)
@@ -141,7 +141,7 @@ Test coverage ve örnekler için:
 
 ---
 
-## 🚦 Hata Yönetimi & Response Formatı
+## Hata Yönetimi & Response Formatı
 
 - Standart response:
     - `success` (true/false)
@@ -154,7 +154,7 @@ Test coverage ve örnekler için:
 
 ---
 
-## 📝 Dokümantasyon
+## Dokümantasyon
 
 ### API & Endpoint Dokümantasyonu
 - [ENDPOINTS.md](./api/ENDPOINTS.md) — Detaylı endpoint referansı ve örnekleri
@@ -179,14 +179,14 @@ Test coverage ve örnekler için:
 
 ---
 
-## 👥 Katkı & İletişim
+## Katkı & İletişim
 
 Pull request gönderebilir, hata veya öneri iletebilirsin.
 Katkı rehberi yakında eklenecek.
 
 ---
 
-## 📧 Lisans & İletişim
+## Lisans & İletişim
 
 [Lisans veya iletişim bilgilerini buraya ekle]
 

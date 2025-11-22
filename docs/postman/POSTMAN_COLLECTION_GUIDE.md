@@ -1,4 +1,4 @@
-# 📮 Postman Collection Kullanım Rehberi
+# POSTMAN_COLLECTION_GUIDE.md
 
 Bu rehber, POI Sync Service API'sinin güncellenmiş Postman collection'ını nasıl kullanacağınızı açıklar.
 
@@ -6,7 +6,7 @@ Bu rehber, POI Sync Service API'sinin güncellenmiş Postman collection'ını na
 
 ---
 
-## 📥 Collection'ı İçe Aktarma
+## Collection'ı İçe Aktarma
 
 1. Postman uygulamasını açın
 2. **Import** butonuna tıklayın
@@ -15,7 +15,7 @@ Bu rehber, POI Sync Service API'sinin güncellenmiş Postman collection'ını na
 
 ---
 
-## 🔧 Environment Değişkenlerini Yapılandırma
+## Environment Değişkenlerini Yapılandırma
 
 Collection içinde 5 adet değişken tanımlanmıştır:
 
@@ -37,9 +37,9 @@ Collection içinde 5 adet değişken tanımlanmıştır:
 
 ---
 
-## 🚀 API Test Akışı
+## API Test Akışı
 
-### 1️⃣ Authentication Test Akışı
+### Authentication Test Akışı
 
 #### A. Yeni Kullanıcı Kaydı
 ```
@@ -48,7 +48,6 @@ Collection içinde 5 adet değişken tanımlanmıştır:
 3. Postman'de "Register" endpoint'ini açın
 4. Body'de idToken'ı yapıştırın
 5. Send
-6. ✅ Token otomatik olarak collection variable'a kaydedilir
 ```
 
 #### B. Mevcut Kullanıcı Girişi
@@ -58,7 +57,6 @@ Collection içinde 5 adet değişken tanımlanmıştır:
 3. Postman'de "Login" endpoint'ini açın
 4. Body'de idToken'ı yapıştırın
 5. Send
-6. ✅ Token otomatik olarak collection variable'a kaydedilir
 ```
 
 #### C. Şifre Sıfırlama
@@ -66,10 +64,9 @@ Collection içinde 5 adet değişken tanımlanmıştır:
 1. "Send Password Reset Email" endpoint'ini açın
 2. Body'de email adresini girin
 3. Send
-4. ✅ Email gönderilir
 ```
 
-### 2️⃣ Places API Test Akışı
+### Places API Test Akışı
 
 Önce authentication yapıldığından emin olun (token dolu olmalı)!
 
@@ -82,7 +79,6 @@ Collection içinde 5 adet değişken tanımlanmıştır:
    - radius: 2000 (2 km)
    - type: cafe
 3. Send
-4. ✅ Hibrit arama stratejisi çalışır (Redis → MongoDB → Google API)
 ```
 
 #### B. Metin ile Arama
@@ -102,10 +98,9 @@ Collection içinde 5 adet değişken tanımlanmıştır:
 2. "Get Place Details" endpoint'ini açın
 3. Path variable'da placeId'yi girin
 4. Send
-5. ✅ Detaylı bilgiler (adres, telefon, çalışma saatleri vb.) gelir
 ```
 
-### 3️⃣ Sync API Test Akışı (Admin Only)
+### Sync API Test Akışı (Admin Only)
 
 **⚠️ DİKKAT:** Bu endpoint'ler için ADMIN rolüne sahip olmanız gerekir!
 
@@ -119,8 +114,6 @@ Collection içinde 5 adet değişken tanımlanmıştır:
    - radius: 5000
    - type: restaurant
 4. Send
-5. ✅ Job ID otomatik olarak collection variable'a kaydedilir
-6. Response: 202 Accepted
 ```
 
 #### B. Senkronizasyon Durumu Kontrolü
@@ -128,23 +121,17 @@ Collection içinde 5 adet değişken tanımlanmıştır:
 1. "Get Sync Job Status" endpoint'ini açın
 2. Path variable'da jobId zaten otomatik dolu olacak ({{jobId}})
 3. Send
-4. Status değerleri:
-   - PENDING: Kuyrukta bekliyor
-   - IN_PROGRESS: İşlem devam ediyor
-   - COMPLETED: Başarıyla tamamlandı
-   - FAILED: Hata oluştu (error mesajı da dönülür)
 ```
 
-### 4️⃣ Health Check
+### Health Check
 ```
 1. "Health Check" endpoint'ini açın
 2. Send (authentication gerektirmez)
-3. ✅ Servis ve bağımlılıkların durumunu gösterir
 ```
 
 ---
 
-## 🔐 Header'lar
+## Header'lar
 
 ### Tüm Endpoint'ler için Gerekli Header'lar
 
@@ -157,7 +144,7 @@ Collection içinde 5 adet değişken tanımlanmıştır:
 
 ---
 
-## 🤖 Otomatik Test Script'leri
+## Otomatik Test Script'leri
 
 Collection'da bazı endpoint'lere otomatik test script'leri eklenmiştir:
 
@@ -188,7 +175,7 @@ if (pm.response.code === 202) {
 
 ---
 
-## 📋 Collection İçeriği
+## Collection İçeriği
 
 ### Toplam 11 Endpoint
 
@@ -214,7 +201,7 @@ if (pm.response.code === 202) {
 
 ---
 
-## 🌍 Farklı Environment'lar için Kullanım
+## Farklı Environment'lar için Kullanım
 
 ### Local Development
 ```json
@@ -249,7 +236,7 @@ if (pm.response.code === 202) {
 
 ---
 
-## 🐛 Sık Karşılaşılan Hatalar ve Çözümleri
+## Sık Karşılaşılan Hatalar ve Çözümleri
 
 ### 1. 401 Unauthorized (AUTH_003)
 **Sebep:** Token eksik veya geçersiz
@@ -290,7 +277,7 @@ if (pm.response.code === 202) {
 
 ---
 
-## 💡 İpuçları
+## İpuçları
 
 1. **Token Yönetimi:** Login/Register sonrası token'lar otomatik kaydedilir, manuel kopyalama gerektirmez
 
@@ -306,7 +293,7 @@ if (pm.response.code === 202) {
 
 ---
 
-## 📚 İlgili Dokümanlar
+## İlgili Dokümanlar
 
 - [ENDPOINTS.md](./ENDPOINTS.md) - Tüm endpoint'lerin detaylı açıklaması
 - [ERROR_CODES.md](./ERROR_CODES.md) - Tüm hata kodları ve anlamları
@@ -316,7 +303,7 @@ if (pm.response.code === 202) {
 
 ---
 
-## 🆘 Destek
+## Destek
 
 Herhangi bir sorun yaşarsanız:
 1. İlgili endpoint'in description'ını okuyun
@@ -326,5 +313,4 @@ Herhangi bir sorun yaşarsanız:
 
 ---
 
-**Happy Testing! 🚀**
-
+**Happy Testing!**

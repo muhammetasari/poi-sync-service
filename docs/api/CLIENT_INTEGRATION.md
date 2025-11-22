@@ -1,22 +1,22 @@
-# 📱 Client (Mobile/Web) Firebase Authentication Entegrasyon Rehberi
+# Client (Mobile/Web) Firebase Authentication Entegrasyon Rehberi
 
-Bu dokümanda mobil ve web geliştiriciler için POI Sync Service backend'i ile Firebase Authentication entegrasyonu detaylı şekilde açıklanmaktadır.
+Bu dokümanda mobil ve web geliştiriciler için POI Sync Service backend'i ile Firebase Authentication entegrasyonu açıklanmaktadır.
 
 ---
 
-## 🎯 Genel Bakış
+## Genel Bakış
 
 POI Sync Service, Firebase Authentication kullanarak kullanıcı kimlik doğrulamasını yönetir. Client-side akış şu şekildedir:
 
-1. **Client** → Firebase SDK ile kullanıcı kaydı/girişi yapar
-2. **Firebase** → ID Token döner
-3. **Client** → ID Token'ı backend'e gönderir
-4. **Backend** → Token'ı verify eder ve JWT token döner
-5. **Client** → JWT token ile backend API'lerini kullanır
+1. Client → Firebase SDK ile kullanıcı kaydı/girişi yapar
+2. Firebase → ID Token döner
+3. Client → ID Token'ı backend'e gönderir
+4. Backend → Token'ı verify eder ve JWT token döner
+5. Client → JWT token ile backend API'lerini kullanır
 
 ---
 
-## 📦 Firebase SDK Kurulumu
+## Firebase SDK Kurulumu
 
 ### iOS (Swift)
 
@@ -59,7 +59,7 @@ yarn add firebase
 
 ---
 
-## ⚙️ Firebase Konfigürasyonu
+## Firebase Konfigürasyonu
 
 Backend ekibinden alacağınız Firebase config bilgilerini uygulamanıza ekleyin:
 
@@ -107,7 +107,7 @@ const auth = getAuth(app);
 
 ---
 
-## 🔐 Authentication Flow Diyagramı
+## Authentication Flow Diyagramı
 
 ```
 ┌─────────┐                ┌──────────┐              ┌─────────┐
@@ -762,7 +762,7 @@ val response = apiService.getNearbyPlaces(
 
 ---
 
-## 🔟 Best Practices
+## Best Practices
 
 ### 1. Token Storage (Güvenli Saklama)
 
@@ -831,7 +831,7 @@ if !user.isEmailVerified {
 
 ---
 
-## 📚 Örnek Repository Yapısı
+## Örnek Repository Yapısı
 
 ```
 /app
@@ -857,7 +857,7 @@ if !user.isEmailVerified {
 
 ---
 
-## 🆘 Sorun Giderme
+## Sorun Giderme
 
 ### Firebase Token Alınamıyor
 - Firebase SDK'nın doğru configure edildiğinden emin olun
@@ -876,7 +876,7 @@ if !user.isEmailVerified {
 
 ---
 
-## 📞 İletişim
+## İletişim
 
 Backend API ile ilgili sorularınız için backend ekibi ile iletişime geçin.
 
@@ -891,4 +891,3 @@ Backend API ile ilgili sorularınız için backend ekibi ile iletişime geçin.
 ---
 
 **Happy Coding! 🚀**
-

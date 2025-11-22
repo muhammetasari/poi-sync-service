@@ -1,55 +1,55 @@
-# 📋 CHANGELOG - Proje Değişiklik Geçmişi
+# CHANGELOG - Proje Değişiklik Geçmişi
 
 ---
 
-## 📮 Postman Collection Update (22 Kasım 2025)
+## Postman Collection Update (22 Kasım 2025)
 
-### 🎯 Özet
+### Özet
 Postman collection tamamen güncellendi ve tüm API endpoint'leri eklendi. Firebase authentication desteği, otomatik token yönetimi ve kapsamlı dokümantasyon eklendi.
 
-### 🚀 Yeni Özellikler
+### Yeni Özellikler
 
 #### 1. Eksik Endpoint'ler Eklendi
 **Dosya:** `postman_collection.json`
-- ✅ Send Password Reset Email endpoint'i
-- ✅ Send Email Verification endpoint'i
-- ✅ Update User Role (Admin) endpoint'i
-- ✅ Get Place Details endpoint'i
-- ✅ Get Sync Job Status endpoint'i
-- ✅ Health Check endpoint'i
+- Send Password Reset Email endpoint'i
+- Send Email Verification endpoint'i
+- Update User Role (Admin) endpoint'i
+- Get Place Details endpoint'i
+- Get Sync Job Status endpoint'i
+- Health Check endpoint'i
 
 #### 2. Firebase Authentication Desteği
-- ✅ Register endpoint'i Firebase ID token kullanıyor
-- ✅ Login endpoint'i Firebase ID token kullanıyor
-- ❌ Social Login endpoint'i kaldırıldı (Login ile birleştirildi)
+- Register endpoint'i Firebase ID token kullanıyor
+- Login endpoint'i Firebase ID token kullanıyor
+- Social Login endpoint'i kaldırıldı (Login ile birleştirildi)
 
 #### 3. Environment Variable'lar
-- ✅ `baseUrl` - API base URL
-- ✅ `apiKey` - X-API-Key değeri
-- ✅ `token` - JWT access token (otomatik dolar)
-- ✅ `refreshToken` - JWT refresh token (otomatik dolar)
-- ✅ `jobId` - Sync job ID (otomatik dolar)
+- `baseUrl` - API base URL
+- `apiKey` - X-API-Key değeri
+- `token` - JWT access token (otomatik dolar)
+- `refreshToken` - JWT refresh token (otomatik dolar)
+- `jobId` - Sync job ID (otomatik dolar)
 
 #### 4. Otomatik Test Script'leri
-- ✅ Register/Login - Token'ları otomatik kaydeder
-- ✅ Start Location Sync - Job ID'yi otomatik kaydeder
+- Register/Login - Token'ları otomatik kaydeder
+- Start Location Sync - Job ID'yi otomatik kaydeder
 
 #### 5. Header'lar Yapılandırıldı
-- ✅ X-API-Key header'ı tüm endpoint'lere eklendi
-- ✅ Authorization Bearer token gerekli endpoint'lere eklendi
-- ✅ Accept-Language header'ı i18n için eklendi
+- X-API-Key header'ı tüm endpoint'lere eklendi
+- Authorization Bearer token gerekli endpoint'lere eklendi
+- Accept-Language header'ı i18n için eklendi
 
 #### 6. Kapsamlı Dokümantasyon
 **Yeni Dosyalar:**
-- ✅ `docs/POSTMAN_COLLECTION_GUIDE.md` - Kullanım rehberi
-- ✅ `docs/POSTMAN_UPDATE_SUMMARY.md` - Güncelleme detayları
-- ✅ `docs/WHY_FIREBASE_AUTH.md` - Firebase Authentication tercih nedenleri
+- `docs/POSTMAN_COLLECTION_GUIDE.md` - Kullanım rehberi
+- `docs/POSTMAN_UPDATE_SUMMARY.md` - Güncelleme detayları
+- `docs/WHY_FIREBASE_AUTH.md` - Firebase Authentication tercih nedenleri
 
-### 📊 İstatistikler
-- **Toplam Endpoint:** 12 (önceden 5, +7 yeni)
-- **Toplam Klasör:** 4 (Auth, Places, Sync, Health)
-- **Toplam Variable:** 5
-- **Otomatik Script:** 3
+### İstatistikler
+- Toplam Endpoint: 12 (önceden 5, +7 yeni)
+- Toplam Klasör: 4 (Auth, Places, Sync, Health)
+- Toplam Variable: 5
+- Otomatik Script: 3
 
 ### 📝 Endpoint Listesi
 
@@ -75,54 +75,54 @@ Postman collection tamamen güncellendi ve tüm API endpoint'leri eklendi. Fireb
 
 ---
 
-## 🔥 Versiyon 2.0.0 - Firebase Authentication Migration (22 Kasım 2025)
+## Versiyon 2.0.0 - Firebase Authentication Migration (22 Kasım 2025)
 
-### 🎯 Özet
+### Özet
 Bu sürümde **tüm authentication sistemi Firebase Authentication'a taşındı**. Email/password yönetimi, şifre sıfırlama, email doğrulama ve sosyal login işlemleri artık Firebase tarafından yönetiliyor. Backend sadece Firebase token'larını verify edip JWT token üretiyor.
 
-### ⚠️ BREAKING CHANGES
+### BREAKING CHANGES
 
 #### API Endpoint Değişiklikleri
-- 🔴 `POST /api/auth/register` - Request body değişti (artık `firebaseToken` gerekli)
-- 🔴 `POST /api/auth/login` - Request body değişti (artık `firebaseToken` gerekli)
-- ❌ `POST /api/auth/social-login` - **KALDIRILDI** (login ile birleştirildi)
+- `POST /api/auth/register` - Request body değişti (artık `firebaseToken` gerekli)
+- `POST /api/auth/login` - Request body değişti (artık `firebaseToken` gerekli)
+- `POST /api/auth/social-login` - **KALDIRILDI** (login ile birleştirildi)
 
 #### Database Schema Değişiklikleri
-- ✅ `UserDocument.firebaseUid` - Yeni alan (Firebase user ID)
-- ✅ `UserDocument.role` - String olarak role ("user" veya "admin")
-- ✅ `UserDocument.authProvider` - String olarak provider ("password", "google.com", vb.)
-- ✅ `UserDocument.createdAt` ve `updatedAt` - Timestamp alanları
-- ❌ `UserDocument.password` - **KALDIRILDI** (Firebase yönetiyor)
-- ❌ `UserDocument.roles: Set<UserRole>` - **KALDIRILDI** (tek role string olarak)
+- `UserDocument.firebaseUid` - Yeni alan (Firebase user ID)
+- `UserDocument.role` - String olarak role ("user" veya "admin")
+- `UserDocument.authProvider` - String olarak provider ("password", "google.com", vb.)
+- `UserDocument.createdAt` ve `updatedAt` - Timestamp alanları
+- `UserDocument.password` - **KALDIRILDI** (Firebase yönetiyor)
+- `UserDocument.roles: Set<UserRole>` - **KALDIRILDI** (tek role string olarak)
 
-### 🚀 Yeni Özellikler
+### Yeni Özellikler
 
 #### 1. Unified Authentication
 **Dosya:** `AuthController.kt`, `AuthService.kt`
-- ✅ Email/password ve social login tek endpoint'te birleştirildi
-- ✅ Client Firebase ile authenticate olur, backend Firebase token'ı verify eder
-- ✅ Tüm authentication provider'lar (Google, Facebook, Apple) aynı flow'u kullanır
+- Email/password ve social login tek endpoint'te birleştirildi
+- Client Firebase ile authenticate olur, backend Firebase token'ı verify eder
+- Tüm authentication provider'lar (Google, Facebook, Apple) aynı flow'u kullanır
 
 #### 2. Firebase Custom Claims - Role Yönetimi
 **Dosya:** `AuthService.kt`
-- ✅ `user` ve `admin` rolleri Firebase Custom Claims ile yönetiliyor
-- ✅ Initial admin kullanıcı `INITIAL_ADMIN_EMAIL` environment variable ile belirlenir
-- ✅ Admin kullanıcılar diğer kullanıcıların role'ünü değiştirebilir
-- ✅ Role bilgisi hem Firebase hem MongoDB hem de JWT token'da saklanıyor
+- `user` ve `admin` rolleri Firebase Custom Claims ile yönetiliyor
+- Initial admin kullanıcı `INITIAL_ADMIN_EMAIL` environment variable ile belirlenir
+- Admin kullanıcılar diğer kullanıcıların role'ünü değiştirebilir
+- Role bilgisi hem Firebase hem MongoDB hem de JWT token'da saklanıyor
 
 #### 3. Yeni API Endpoint'leri
 **Dosya:** `AuthController.kt`
-- ✅ `POST /api/auth/send-password-reset-email` - Şifre sıfırlama email'i gönder
-- ✅ `POST /api/auth/send-email-verification` - Email doğrulama gönder
-- ✅ `PUT /api/auth/users/{userId}/role` - Kullanıcı role'ünü güncelle (Admin only)
+- `POST /api/auth/send-password-reset-email` - Şifre sıfırlama email'i gönder
+- `POST /api/auth/send-email-verification` - Email doğrulama gönder
+- `PUT /api/auth/users/{userId}/role` - Kullanıcı role'ünü güncelle (Admin only)
 
 #### 4. JWT Token İyileştirmeleri
 **Dosya:** `JwtService.kt`
-- ✅ JWT token'a `role` claim'i eklendi
-- ✅ JWT token'a `firebaseUid` claim'i eklendi
-- ✅ `getRoleFromToken()` metodu eklendi
+- JWT token'a `role` claim'i eklendi
+- JWT token'a `firebaseUid` claim'i eklendi
+- `getRoleFromToken()` metodu eklendi
 
-### 🔧 Kod Değişiklikleri
+### Kod Değişiklikleri
 
 #### DTO Güncellemeleri
 **Dosya:** `src/main/kotlin/com/rovits/poisyncservice/domain/dto/AuthDtos.kt`
@@ -241,7 +241,7 @@ fun loadUserByFirebaseUid(firebaseUid: String): UserDetails
 val authority = SimpleGrantedAuthority("ROLE_${user.role.uppercase()}")
 ```
 
-### 📚 Yeni Dökümanlar
+### Yeni Dökümanlar
 
 #### 1. FIREBASE_SETUP.md
 **Dosya:** `docs/FIREBASE_SETUP.md`
@@ -282,7 +282,7 @@ val authority = SimpleGrantedAuthority("ROLE_${user.role.uppercase()}")
 - Sonraki adımlar
 - Döküman referansları
 
-### ⚙️ Configuration Değişiklikleri
+### Configuration Değişiklikleri
 
 #### Application Properties
 **Dosya:** `src/main/resources/application-docker.properties`
@@ -299,7 +299,7 @@ GOOGLE_CREDENTIALS_PATH=/path/to/serviceAccountKey.json # Firebase Service Accou
 INITIAL_ADMIN_EMAIL=admin@yourdomain.com # İlk admin kullanıcı (opsiyonel)
 ```
 
-### 🗑️ Kaldırılan Kodlar
+### Kaldırılan Kodlar
 
 #### Enum'lar
 - ❌ `UserRole.kt` - Artık kullanılmıyor (string olarak tutuluyor)
@@ -310,12 +310,12 @@ INITIAL_ADMIN_EMAIL=admin@yourdomain.com # İlk admin kullanıcı (opsiyonel)
 - ❌ Password validation logic kaldırıldı
 - ❌ Password blacklist kontrolü kaldırıldı
 
-### 🧪 Test Coverage
+### Test Coverage
 - ✅ Build başarılı (compilation errors: 0)
 - ⚠️ Integration testler yazılmalı
 - ⚠️ Manuel test senaryoları çalıştırılmalı
 
-### 📊 API Değişiklikleri Özeti
+### API Değişiklikleri Özeti
 
 | Endpoint | Durum | Değişiklik |
 |----------|-------|-----------|
@@ -327,7 +327,7 @@ INITIAL_ADMIN_EMAIL=admin@yourdomain.com # İlk admin kullanıcı (opsiyonel)
 | `PUT /api/auth/users/{userId}/role` | ✅ Yeni | Role yönetimi (Admin) |
 | `POST /api/auth/logout` | ✔️ Değişmedi | Mevcut |
 
-### 🔐 Güvenlik İyileştirmeleri
+### Güvenlik İyileştirmeleri
 
 1. **Password Management**
    - ✅ Şifreler artık backend'de saklanmıyor
@@ -344,7 +344,7 @@ INITIAL_ADMIN_EMAIL=admin@yourdomain.com # İlk admin kullanıcı (opsiyonel)
    - ✅ JWT token'da role bilgisi
    - ✅ Spring Security ile endpoint koruması
 
-### 📝 Migration Notları
+### Migration Notları
 
 #### Mevcut Kullanıcılar
 - ⚠️ Mevcut kullanıcılar **otomatik migrate edilmez**
@@ -367,7 +367,7 @@ INITIAL_ADMIN_EMAIL=admin@yourdomain.com # İlk admin kullanıcı (opsiyonel)
 4. Error handling güncellemesi
 5. Role-based UI implementasyonu
 
-### 🚀 Deployment Checklist
+### Deployment Checklist
 
 #### Backend
 - [ ] Firebase Console setup tamamlandı
@@ -385,13 +385,13 @@ INITIAL_ADMIN_EMAIL=admin@yourdomain.com # İlk admin kullanıcı (opsiyonel)
 - [ ] Role-based UI implement edildi
 - [ ] Test edildi (iOS, Android, Web)
 
-### 🔗 İlgili Dökümanlar
+### İlgili Dökümanlar
 - [FIREBASE_SETUP.md](FIREBASE_SETUP.md) - Firebase Console kurulum
 - [CLIENT_INTEGRATION.md](CLIENT_INTEGRATION.md) - Client-side entegrasyon
 - [AUTH_MIGRATION_SUMMARY.md](AUTH_MIGRATION_SUMMARY.md) - Detaylı teknik özet
 - [IMPLEMENTATION_COMPLETE.md](IMPLEMENTATION_COMPLETE.md) - Quick start
 
-### 💡 Sonraki Adımlar
+### Sonraki Adımlar
 1. Firebase Console setup
 2. Client-side implementasyon
 3. Integration testleri
@@ -401,12 +401,12 @@ INITIAL_ADMIN_EMAIL=admin@yourdomain.com # İlk admin kullanıcı (opsiyonel)
 
 ---
 
-## 🔴 Versiyon 1.2.0 - Logic Fixes (22 Kasım 2025)
+## Versiyon 1.2.0 - Logic Fixes (22 Kasım 2025)
 
-### 🎯 Özet
+### Özet
 Bu sürümde **kritik mantık hataları** tespit edilip düzeltildi. Rate limiting, memory leak, cache collision ve MongoDB upsert sorunları çözüldü.
 
-### 🐛 Düzeltilen Kritik Hatalar
+### Düzeltilen Kritik Hatalar
 
 #### 1. Rate Limiting - Counter Artırım Hatası ⚠️ KRİTİK
 **Dosya:** `RateLimitService.kt`  
@@ -428,48 +428,48 @@ Bu sürümde **kritik mantık hataları** tespit edilip düzeltildi. Rate limiti
 **Problem:** 4 decimal (~11m) hassasiyet cache collision'a neden oluyordu.  
 **Çözüm:** Hassasiyet 6 decimal'e (~0.11m) çıkarıldı.
 
-### 🧪 Test Coverage
+### Test Coverage
 - ✅ `RateLimitServiceTest.kt` - 8 test case
 - ✅ `JobStatusManagerTest.kt` - 9 test case
 - ✅ `PoiServiceCacheKeyTest.kt` - 8 test case
 
-### 📚 Dokümantasyon
+### Dokümantasyon
 - ✅ `LOGIC_FIXES.md` - Detaylı analiz ve çözüm dokümantasyonu
 
-### 🔗 Referans
+### Referans
 Detaylar için: [LOGIC_FIXES.md](./LOGIC_FIXES.md)
 
 ---
 
-## 🟢 Versiyon 1.1.0 - i18n İyileştirmeleri (22 Kasım 2025)
+## Versiyon 1.1.0 - i18n İyileştirmeleri (22 Kasım 2025)
 
-### 🎯 Özet
+### Özet
 
 Bu sürümde **MessageKeys i18n iyileştirmeleri** ve **dokümantasyon güncellemeleri** gerçekleştirildi.
 
 ### Öne Çıkan Değişiklikler
-- ✅ MessageKeys sistemi %100 i18n coverage'a ulaştı
-- ✅ Hardcoded string'ler tamamen kaldırıldı
-- ✅ 12 yeni MessageKey sabiti eklendi
-- ✅ 4 Türkçe çeviri tamamlandı
-- ✅ Dokümantasyon kapsamlı güncellendi
+- MessageKeys sistemi %100 i18n coverage'a ulaştı
+- Hardcoded string'ler tamamen kaldırıldı
+- 12 yeni MessageKey sabiti eklendi
+- 4 Türkçe çeviri tamamlandı
+- Dokümantasyon kapsamlı güncellendi
 
 ---
 
-## 🔧 Kod Değişiklikleri
+## Kod Değişiklikleri
 
 ### MessageKeys İyileştirmeleri
 
 #### 1. `src/main/kotlin/com/rovits/poisyncservice/util/MessageKeys.kt`
 **Değişiklikler:**
-- ✅ 12 yeni MessageKey sabiti eklendi:
+- 12 yeni MessageKey sabiti eklendi:
   - Cache: `CACHE_UNAVAILABLE`, `CACHE_SERIALIZATION_FAILED`, `CACHE_CONNECTION_FAILED`
   - Database: `DATABASE_UNAVAILABLE`, `DATABASE_CONNECTION_FAILED`
   - Firebase: `FIREBASE_FAILED`, `FIREBASE_UNAVAILABLE`
   - POI: `POI_NOT_FOUND`
   - Validation: `VALIDATION_TYPE_MISMATCH`, `VALIDATION_JSON_MALFORMED`
-- ✅ `TOO_MANY_REQUESTS` kaldırıldı (RATE_LIMIT_EXCEEDED ile birleştirildi)
-- ✅ Kategorize edilmiş yorum yapısı düzenlendi
+- `TOO_MANY_REQUESTS` kaldırıldı (RATE_LIMIT_EXCEEDED ile birleştirildi)
+- Kategorize edilmiş yorum yapısı düzenlendi
 
 **İyileştirme:**
 ```kotlin
@@ -485,7 +485,7 @@ const val RATE_LIMIT_EXCEEDED = "error.rate.limit.exceeded"
 
 #### 2. `src/main/resources/messages.properties`
 **Değişiklikler:**
-- ✅ 2 yeni validation mesajı eklendi:
+- 2 yeni validation mesajı eklendi:
   ```properties
   error.validation.type.mismatch=Invalid value for parameter '{0}'. Expected type: {1}
   error.validation.json.malformed=Malformed JSON request body
@@ -495,7 +495,7 @@ const val RATE_LIMIT_EXCEEDED = "error.rate.limit.exceeded"
 
 #### 3. `src/main/resources/messages_tr.properties`
 **Değişiklikler:**
-- ✅ 4 Türkçe çeviri eklendi:
+- 4 Türkçe çeviri eklendi:
   ```properties
   error.validation.password.strength=Şifre en az bir büyük harf, bir küçük harf ve bir rakam içermelidir
   error.validation.provider.invalid=Sağlayıcı google, facebook veya apple olmalıdır
@@ -507,7 +507,7 @@ const val RATE_LIMIT_EXCEEDED = "error.rate.limit.exceeded"
 
 #### 4. `src/main/kotlin/com/rovits/poisyncservice/config/GlobalExceptionHandler.kt`
 **Değişiklikler:**
-- ✅ 4 hardcoded string MessageKeys'e taşındı:
+- 4 hardcoded string MessageKeys'e taşındı:
 
 **4.1. handleTypeMismatch()**
 ```kotlin
@@ -564,17 +564,17 @@ FieldError(field = fieldError.field, message = localizedMessage, rejectedValue =
 
 #### 5. `src/main/kotlin/com/rovits/poisyncservice/config/RateLimitFilter.kt`
 **Değişiklikler:**
-- ✅ `MessageKeys.TOO_MANY_REQUESTS` → `MessageKeys.RATE_LIMIT_EXCEEDED`
+- `MessageKeys.TOO_MANY_REQUESTS` → `MessageKeys.RATE_LIMIT_EXCEEDED`
 
 ---
 
 #### 6. `src/main/kotlin/com/rovits/poisyncservice/config/ApiKeyFilter.kt`
 **Değişiklikler:**
-- ✅ `MessageKeys.TOO_MANY_REQUESTS` → `MessageKeys.RATE_LIMIT_EXCEEDED`
+- `MessageKeys.TOO_MANY_REQUESTS` → `MessageKeys.RATE_LIMIT_EXCEEDED`
 
 ---
 
-## 📚 Dokümantasyon Güncellemeleri
+## Dokümantasyon Güncellemeleri
 
 ### 1. `docs/README.md`
 **Değişiklikler:**
@@ -646,7 +646,7 @@ FieldError(field = fieldError.field, message = localizedMessage, rejectedValue =
 
 ---
 
-## 📊 Dokümantasyon Yapısı
+## Dokümantasyon Yapısı
 
 ```
 docs/
@@ -659,45 +659,45 @@ docs/
 
 ---
 
-## 🎯 Kapsanan Yeni Özellikler
+## Kapsanan Yeni Özellikler
 
 ### 1. **Authentication**
-- ✅ Logout endpoint ve token blacklist mekanizması
-- ✅ Email doğrulama kontrolleri
-- ✅ Provider (sosyal login) uyumluluk kontrolleri
-- ✅ Rate limiting
+- Logout endpoint ve token blacklist mekanizması
+- Email doğrulama kontrolleri
+- Provider (sosyal login) uyumluluk kontrolleri
+- Rate limiting
 
 ### 2. **Sync Mekanizması**
-- ✅ Asenkron job-based senkronizasyon
-- ✅ Job durumu sorgulama (PENDING, IN_PROGRESS, COMPLETED, FAILED)
-- ✅ Job ID ile takip
+- Asenkron job-based senkronizasyon
+- Job durumu sorgulama (PENDING, IN_PROGRESS, COMPLETED, FAILED)
+- Job ID ile takip
 
 ### 3. **Dokümantasyon**
-- ✅ Swagger/OpenAPI entegrasyonu
-- ✅ Detaylı endpoint referansı
-- ✅ Güncel hata kodları
-- ✅ Response örnekleri
+- Swagger/OpenAPI entegrasyonu
+- Detaylı endpoint referansı
+- Güncel hata kodları
+- Response örnekleri
 
 ### 4. **Güvenlik**
-- ✅ JWT token blacklist
-- ✅ API key yetkilendirme
-- ✅ Rate limiting
-- ✅ Role-based access control (Admin için sync endpoint'leri)
+- JWT token blacklist
+- API key yetkilendirme
+- Rate limiting
+- Role-based access control (Admin için sync endpoint'leri)
 
 ---
 
-## 🔄 Senkronize Edilmesi Gereken Dosyalar
+## Senkronize Edilmesi Gereken Dosyalar
 
 Aşağıdaki dosyalar güncellemelerle **senkronize edilmiştir**:
 
-- ✅ `src/main/resources/messages.properties`
-- ✅ `src/main/resources/messages_tr.properties`
-- ✅ `src/main/kotlin/.../exception/ErrorCodes.kt`
-- ✅ Tüm Controller dosyaları (Swagger annotations ile)
+- `src/main/resources/messages.properties`
+- `src/main/resources/messages_tr.properties`
+- `src/main/kotlin/.../exception/ErrorCodes.kt`
+- Tüm Controller dosyaları (Swagger annotations ile)
 
 ---
 
-## 📝 Kullanım Notları
+## Kullanım Notları
 
 ### Swagger UI Erişimi
 ```
@@ -717,7 +717,7 @@ Hata aldığınızda:
 
 ---
 
-## 🚀 Sonraki Adımlar
+## Sonraki Adımlar
 
 ### Önerilen İyileştirmeler:
 1. **API Versiyonlama:** `/api/v1/...` şeklinde versiyonlama eklenebilir

@@ -1,10 +1,10 @@
-# 🌐 i18n_GUIDE.md
+# i18n_GUIDE.md
 
 Bu rehber, POI Sync Service API için yeni bir dil nasıl eklenir, mevcut mesajlar nasıl güncellenir ve i18n konu başlıkları nasıl yönetilir konularında adım adım açıklamalar içerir.
 
 ---
 
-## 1️⃣ Mevcut Dosya Yapısı
+## Mevcut Dosya Yapısı
 
 Aşağıdaki gibi, her dil için ayrı bir mesaj dosyası bulunur:
 
@@ -17,7 +17,7 @@ src/main/resources/
 
 ---
 
-## 2️⃣ Yeni Dil Nasıl Eklenir?
+## Yeni Dil Nasıl Eklenir?
 
 ### Adım 1: Dosya Oluştur
 Yeni dil eklemek için, o dilin ISO koduna göre bir dosya oluştur:
@@ -37,7 +37,7 @@ error.user.not.found=Benutzer mit E-Mail {0} nicht gefunden
 message.operation.successful=Vorgang erfolgreich abgeschlossen
 ```
 
-### Adım 3: Karakter Coding
+### Adım 3: Karakter Kodlaması
 Özel karakterli diller için dosya encoding’in **UTF-8** olduğundan emin ol. (IntelliJ'de File > File Encoding)
 
 ### Adım 4: Locale Ayarını Gözden Geçir
@@ -56,7 +56,7 @@ fun localeResolver(): LocaleResolver {
 
 ---
 
-## 3️⃣ Bir Mesajı Güncellemek
+## Bir Mesajı Güncellemek
 
 1. **Hem default hem tüm lokal dosyalarda** aynı anahtarı aynı şekilde bulup değiştir.
 2. Değerini istenen şekilde güncelle.
@@ -64,14 +64,14 @@ fun localeResolver(): LocaleResolver {
 
 ---
 
-## 4️⃣ Uygulamada Test Etmek
+## Uygulamada Test Etmek
 
 - API isteğinde `Accept-Language: fr` gibi header ile dilediğin dili zorla.
 - Eğer header gelmiyorsa varsayılan dil İngilizce olur.
 
 ---
 
-## 5️⃣ Sık Karşılaşılan Sorunlar ve Çözümleri
+## Sık Karşılaşılan Sorunlar ve Çözümleri
 
 | Sorun                                              | Çözüm/İpucu                                    |
 |----------------------------------------------------|------------------------------------------------|
@@ -82,7 +82,7 @@ fun localeResolver(): LocaleResolver {
 
 ---
 
-## 6️⃣ Örnek: Üçüncü Dil (Almanca) Ekleme
+## Örnek: Üçüncü Dil (Almanca) Ekleme
 
 1. `messages_de.properties` dosyasını oluştur.
 2. İngilizce ve Türkçe dosyalardaki tüm anahtarları kopyala.
@@ -97,7 +97,7 @@ fun localeResolver(): LocaleResolver {
 
 ---
 
-## 7️⃣ Ekstra: i18n'de Placeholder Kullanımı
+## Ekstra: i18n'de Placeholder Kullanımı
 
 - `{0}`, `{1}` biçimli placeholderlar dinamik veri içindir.
 - Mesaj dosyasına: `error.user.not.found=User not found: {0}`
@@ -105,7 +105,7 @@ fun localeResolver(): LocaleResolver {
 
 ---
 
-## 🔗 Kaynaklar
+## Kaynaklar
 
 - [Spring Boot i18n Docs](https://docs.spring.io/spring-boot/docs/current/reference/html/features.html#features.internationalization)
 - [Java Message Formatting Docs](https://docs.oracle.com/javase/8/docs/api/java/text/MessageFormat.html)
@@ -113,3 +113,9 @@ fun localeResolver(): LocaleResolver {
 ---
 
 Herhangi bir ek dil veya çeviri eklemede bu rehber izlenebilir.
+
+---
+
+## Notlar
+- Tüm mesaj anahtarları ve çeviriler güncel tutulmalıdır.
+- Yeni dil eklerken test edilmesi önerilir.
